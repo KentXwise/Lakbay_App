@@ -17,6 +17,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  int _selectedIndex = 0;
   late String displayName;
   late List<Trip> trips;
   String? _selectedTripIdForDelete;
@@ -105,124 +106,133 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Column(
-          children: [
-            Container(
-              color: AppColors.brownPrimary,
-              padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 35.h),
+      body: _selectedIndex == 0
+          ? SafeArea(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Text(
-                        'Kamusta, ',
-                        style: GoogleFonts.poppins(
-                          fontSize: 16.sp,
-                          color: Colors.white70,
-                        ),
-                      ),
-                      Text(
-                        '$displayName!',
-                        style: GoogleFonts.poppins(
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
-                      SizedBox(width: 8.w),
-                      Text('👋', style: TextStyle(fontSize: 18.sp)),
-                    ],
-                  ),
-                  SizedBox(height: 8.h),
-                  Text(
-                    'Plan your next adventure',
-                    style: GoogleFonts.poppins(
-                      fontSize: 14.sp,
-                      color: Colors.white70,
-                    ),
-                  ),
-                  SizedBox(height: 16.h),
                   Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12.r),
-                    ),
-                    padding: EdgeInsets.symmetric(horizontal: 16.w),
-                    child: Row(
+                    color: AppColors.brownPrimary,
+                    padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 35.h),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(Icons.search, color: Colors.grey.shade400),
-                        SizedBox(width: 12.w),
-                        Expanded(
-                          child: TextField(
-                            decoration: InputDecoration(
-                              hintText: 'Search trips by name or destination...',
-                              hintStyle: GoogleFonts.poppins(
-                                fontSize: 14.sp,
-                                color: Colors.grey.shade400,
+                        Row(
+                          children: [
+                            Text(
+                              'Kamusta, ',
+                              style: GoogleFonts.poppins(
+                                fontSize: 16.sp,
+                                color: Colors.white70,
                               ),
-                              border: InputBorder.none,
-                              contentPadding: EdgeInsets.symmetric(vertical: 12.h),
                             ),
+                            Text(
+                              '$displayName!',
+                              style: GoogleFonts.poppins(
+                                fontSize: 16.sp,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
+                            SizedBox(width: 8.w),
+                            Text('👋', style: TextStyle(fontSize: 18.sp)),
+                          ],
+                        ),
+                        SizedBox(height: 8.h),
+                        Text(
+                          'Plan your next adventure',
+                          style: GoogleFonts.poppins(
+                            fontSize: 14.sp,
+                            color: Colors.white70,
+                          ),
+                        ),
+                        SizedBox(height: 16.h),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12.r),
+                          ),
+                          padding: EdgeInsets.symmetric(horizontal: 16.w),
+                          child: Row(
+                            children: [
+                              Icon(Icons.search, color: Colors.grey.shade400),
+                              SizedBox(width: 12.w),
+                              Expanded(
+                                child: TextField(
+                                  decoration: InputDecoration(
+                                    hintText: 'Search trips by name or destination...',
+                                    hintStyle: GoogleFonts.poppins(
+                                      fontSize: 14.sp,
+                                      color: Colors.grey.shade400,
+                                    ),
+                                    border: InputBorder.none,
+                                    contentPadding: EdgeInsets.symmetric(vertical: 12.h),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
                     ),
                   ),
+                  Expanded(
+                    child: trips.isEmpty
+                        ? Center(
+                            child: Text(
+                              'No trips yet. Create one!',
+                              style: GoogleFonts.poppins(
+                                fontSize: 16.sp,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                          )
+                        : ListView.builder(
+                            padding: EdgeInsets.all(24.w),
+                            itemCount: trips.length,
+                            itemBuilder: (context, index) {
+                              return Column(
+                                children: [
+                                  _buildTripCard(trips[index]),
+                                  if (index < trips.length - 1) SizedBox(height: 16.h),
+                                ],
+                              );
+                            },
+                          ),
+                  ),
                 ],
               ),
-            ),
-            Expanded(
-              child: trips.isEmpty
-                  ? Center(
-                      child: Text(
-                        'No trips yet. Create one!',
-                        style: GoogleFonts.poppins(
-                          fontSize: 16.sp,
-                          color: Colors.grey.shade600,
-                        ),
-                      ),
-                    )
-                  : ListView.builder(
-                      padding: EdgeInsets.all(24.w),
-                      itemCount: trips.length,
-                      itemBuilder: (context, index) {
-                        return Column(
-                          children: [
-                            _buildTripCard(trips[index]),
-                            if (index < trips.length - 1) SizedBox(height: 16.h),
-                          ],
-                        );
-                      },
-                    ),
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
+            )
+: _selectedIndex == 1
+              ? const Center(
+                  child: Text(
+                    'Coming Soon',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                  ),
+                )
+              : const ProfileScreen(),
+      
+      floatingActionButton: _selectedIndex == 0
+    ? FloatingActionButton(
         backgroundColor: AppColors.brownPrimary,
         onPressed: _showCreateTripModal,
         child: Icon(Icons.add, color: Colors.white),
-      ),
+      )
+    : null,
+
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.white,
         elevation: 8,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.explore), label: 'Explore'),
           BottomNavigationBarItem(icon: Icon(Icons.card_travel), label: 'Trips'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
-        currentIndex: 0,
+        currentIndex: _selectedIndex,
         onTap: (index) {
-          if (index == 3) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const ProfileScreen()),
-            );
-          }
+          setState(() {
+            _selectedIndex = index;
+          });
         },
       ),
     );
@@ -335,7 +345,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ],
               ),
-              // Delete button appears on top-right when selected
               if (isSelected)
                 Positioned(
                   top: 8.w,
@@ -365,7 +374,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 ),
-              // Close button to deselect
               if (isSelected)
                 Positioned(
                   top: 8.w,
