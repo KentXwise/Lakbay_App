@@ -1,6 +1,9 @@
-// lib/screens/login_screen.dart
+// ============================================
+// UPDATED LOGIN_SCREEN.DART - RECEIVE & PASS NICKNAME
+// ============================================
+
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';  // ← ADD THIS
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -9,26 +12,80 @@ import '../widgets/custom_textfield.dart';
 import 'signup_screen.dart';
 import '../widgets/forgot_password_modal.dart';
 import 'home_screen.dart';
+import '../widgets/success_modal.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  // ✅ NEW: Accept nickname from SignupScreen
+  final String? userNickname;
+
+  const LoginScreen({super.key, this.userNickname});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
-    // Set status bar to light background with dark icons
     SystemChrome.setSystemUIOverlayStyle(
       SystemUiOverlayStyle(
-        statusBarColor: Color(0xFFF5F5F5),  // Light gray background
-        statusBarIconBrightness: Brightness.dark,  // Dark icons
+        statusBarColor: Color(0xFFF5F5F5),
+        statusBarIconBrightness: Brightness.dark,
         statusBarBrightness: Brightness.light,
         systemNavigationBarColor: Colors.white,
         systemNavigationBarIconBrightness: Brightness.dark,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
+
+  // ✅ UPDATED: Handle login and pass nickname to HomeScreen
+  void _handleLogin() {
+    String userEmail = emailController.text.trim();
+
+    // Simple validation
+    if (userEmail.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter your email')),
+      );
+      return;
+    }
+
+    if (passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter your password')),
+      );
+      return;
+    }
+
+    // Show success modal
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) => SuccessModal(
+        title: 'Welcome Back!',
+        message: 'You have successfully signed in.',
+        buttonText: 'Continue',
+        onConfirm: () {
+          // ✅ CHANGED: Pass nickname to HomeScreen
+          String nickname = widget.userNickname ?? 'User';
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => HomeScreen(userNickname: nickname),
+            ),
+          );
+        },
       ),
     );
   }
@@ -88,11 +145,13 @@ class _LoginScreenState extends State<LoginScreen> {
                       CustomTextField(
                         hintText: 'Your@email.com',
                         icon: Icons.email_outlined,
+                        controller: emailController,
                       ),
                       CustomTextField(
                         hintText: 'Enter your password',
                         icon: Icons.lock_outline,
                         isPassword: true,
+                        controller: passwordController,
                       ),
 
                       Align(
@@ -111,15 +170,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
 
                       ElevatedButton(
-                        onPressed: () {
-                          String userEmail = 'stefani';
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => HomeScreen(userName: userEmail),
-                            ),
-                          );
-                        },
+                        onPressed: _handleLogin,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.brownPrimary,
                           minimumSize: Size(double.infinity, 60.h),

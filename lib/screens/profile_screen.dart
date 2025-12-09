@@ -2,10 +2,61 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../core/app_colors.dart';
+import '../widgets/logout_confirmation_modal.dart';
 import 'login_screen.dart';
+
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
+
+  // ✅ NEW METHOD: Show logout confirmation dialog
+  void _showLogoutConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) => LogoutConfirmationModal(
+        onConfirm: () => _handleLogout(context),
+        onCancel: () {
+          print('Logout cancelled');
+        },
+      ),
+    );
+  }
+
+  // ✅ NEW METHOD: Handle logout logic
+  Future<void> _handleLogout(BuildContext context) async {
+    try {
+      // Clear user session here (Firebase, SharedPreferences, etc.)
+      // Example:
+      // await FirebaseAuth.instance.signOut();
+      // await SharedPreferences.getInstance().then((prefs) => prefs.clear());
+
+      if (context.mounted) {
+        // Navigate to login screen
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
+          (route) => false,
+        );
+
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Successfully logged out'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Logout failed: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -146,13 +197,7 @@ class ProfileScreen extends StatelessWidget {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
-                      onPressed: () {
-                        Navigator.pushAndRemoveUntil(
-                          context,
-                          MaterialPageRoute(builder: (context) => const LoginScreen()),
-                          (route) => false,
-                        );
-                      },
+                      onPressed: () => _showLogoutConfirmation(context), // ✅ CHANGED
                       icon: const Icon(Icons.logout, color: Colors.white),
                       label: Text(
                         'Logout',

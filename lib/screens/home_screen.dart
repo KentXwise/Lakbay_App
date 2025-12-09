@@ -8,10 +8,12 @@ import 'profile_screen.dart';
 import 'trip_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  final String? userName;
+  final String userNickname;
 
-  const HomeScreen({super.key, this.userName});
-
+const HomeScreen({
+    super.key,
+    this.userNickname = 'Mga Laagan!', 
+  });
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
@@ -25,10 +27,9 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    displayName = widget.userName ?? 'Stefani';
+    displayName = widget.userNickname ?? 'Stefani';
     trips = [];
   }
-
   void _showCreateTripModal() {
     showDialog(
       context: context,
@@ -116,6 +117,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // ✅ CHANGED: Display nickname from parameter
                         Row(
                           children: [
                             Text(
@@ -126,7 +128,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ),
                             Text(
-                              '$displayName!',
+                              '${widget.userNickname}!', // ✅ Use the passed nickname
                               style: GoogleFonts.poppins(
                                 fontSize: 16.sp,
                                 fontWeight: FontWeight.w600,
@@ -137,6 +139,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             Text('👋', style: TextStyle(fontSize: 18.sp)),
                           ],
                         ),
+
                         SizedBox(height: 8.h),
                         Text(
                           'Plan your next adventure',
