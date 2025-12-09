@@ -32,7 +32,7 @@ class _HomeScreenState extends State<HomeScreen> {
     showDialog(
       context: context,
       builder: (context) => CreateTripModal(
-        onTripCreated: (Trip newTrip) {
+        onSave: (Trip newTrip) {
           setState(() {
             trips.add(newTrip);
           });

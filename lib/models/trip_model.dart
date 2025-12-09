@@ -26,17 +26,16 @@ class Trip {
     required this.budget,
     required this.image,
     required this.members,
-    List<dynamic>? activitiesList,     
-    List<Expense>? expensesList,        
-    List<TaskItem>? tasksList,         
-    this.departureTime,                 
-    this.arrivalTime,                   
+    List<dynamic>? activitiesList,      
+    List<Expense>? expensesList,
+    List<TaskItem>? tasksList,
+    this.departureTime,
+    this.arrivalTime,
   })  : activities = activitiesList ?? [],
         expenses = expensesList ?? [],
-        tasks = tasksList ?? [];
-
+        tasks = tasksList ?? []; 
   int getTotalSpent() {
-   return expenses.fold(0, (sum, expense) => sum + expense.cost.toInt());
+    return expenses.fold(0, (sum, expense) => sum + expense.cost.toInt());
   }
   int getRemaining() {
     return budget - getTotalSpent();
@@ -48,7 +47,6 @@ class Expense {
   final String category;
   final double cost;
   final String date;
-
 
   Expense({
     required this.description,

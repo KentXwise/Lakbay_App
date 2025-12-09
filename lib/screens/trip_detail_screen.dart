@@ -12,9 +12,6 @@ import '../models/member_model.dart';
 import '../screens/tasks_screen.dart';
 import '../models/task_model.dart';
 
-
-
-
 class TripDetailScreen extends StatefulWidget {
   final Trip trip;
 
@@ -23,7 +20,6 @@ class TripDetailScreen extends StatefulWidget {
   @override
   State<TripDetailScreen> createState() => _TripDetailScreenState();
 }
-
 
 class _TripDetailScreenState extends State<TripDetailScreen> {
   late String selectedTab;
@@ -175,6 +171,47 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                       ),
                     ],
                   ),
+                  // Departure & Arrival Times Display
+                  if (currentTrip.departureTime != null && currentTrip.departureTime!.isNotEmpty) ...[
+                    SizedBox(height: 8.h),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.flight_takeoff,
+                          color: Colors.grey.shade600,
+                          size: 16.sp,
+                        ),
+                        SizedBox(width: 8.w),
+                        Text(
+                          'Depart: ${currentTrip.departureTime}',
+                          style: GoogleFonts.poppins(
+                            fontSize: 14.sp,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                  if (currentTrip.arrivalTime != null && currentTrip.arrivalTime!.isNotEmpty) ...[
+                    SizedBox(height: 8.h),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.flight_land,
+                          color: Colors.grey.shade600,
+                          size: 16.sp,
+                        ),
+                        SizedBox(width: 8.w),
+                        Text(
+                          'Arrive: ${currentTrip.arrivalTime}',
+                          style: GoogleFonts.poppins(
+                            fontSize: 14.sp,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -456,38 +493,39 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
     );
   }
 
-    Widget _buildBudgetContent() {
-      return BudgetScreen(
-        trip: currentTrip,
-        onTripUpdated: (updatedTrip) {
-          setState(() {
-            currentTrip = updatedTrip;
-          });
-        },
-      );
-    }
+  Widget _buildBudgetContent() {
+    return BudgetScreen(
+      trip: currentTrip,
+      onTripUpdated: (updatedTrip) {
+        setState(() {
+          currentTrip = updatedTrip;
+        });
+      },
+    );
+  }
 
-Widget _buildMembersContent() {
-  return MembersScreen(
-    trip: currentTrip,
-    onTripUpdated: (updatedTrip) {
-      setState(() {
-        currentTrip = updatedTrip;
-      });
-    },
-  );
-}
+  Widget _buildMembersContent() {
+    return MembersScreen(
+      trip: currentTrip,
+      onTripUpdated: (updatedTrip) {
+        setState(() {
+          currentTrip = updatedTrip;
+        });
+      },
+    );
+  }
 
-Widget _buildTaskContent() {
-  return TasksScreen(
-    trip: currentTrip,
-    onTripUpdated: (updatedTrip) {
-      setState(() {
-        currentTrip = updatedTrip;
-      });
-    },
-  );
-}
+  Widget _buildTaskContent() {
+    return TasksScreen(
+      trip: currentTrip,
+      onTripUpdated: (updatedTrip) {
+        setState(() {
+          currentTrip = updatedTrip;
+        });
+      },
+    );
+  }
+
   void _addActivity() {
     int tripDays = _calculateTripDays();
     
@@ -581,56 +619,54 @@ Widget _buildTaskContent() {
     );
   }
 
-void _editTripDetails() {
-  showDialog(
-    context: context,
-    builder: (context) => EditTripModal(
-      trip: currentTrip,
-      onSave: (Trip updatedTrip) {
-        // Track what changed
-        List<String> changedFields = [];
-        
-        if (updatedTrip.title != currentTrip.title) {
-          changedFields.add('Title');
-        }
-        if (updatedTrip.destination != currentTrip.destination) {
-          changedFields.add('Destination');
-        }
-        if (updatedTrip.startDate != currentTrip.startDate) {
-          changedFields.add('Start Date');
-        }
-        if (updatedTrip.endDate != currentTrip.endDate) {
-          changedFields.add('End Date');
-        }
-        if (updatedTrip.budget != currentTrip.budget) {
-          changedFields.add('Budget');
-        }
-        
-        setState(() {
-          currentTrip = updatedTrip;
-        });
-        
-        // Create dynamic message
-        String notificationMessage;
-        if (changedFields.isEmpty) {
-          notificationMessage = '✓ No changes made';
-        } else if (changedFields.length == 1) {
-          notificationMessage = '✓ ${changedFields[0]} updated';
-        } else if (changedFields.length <= 3) {
-          notificationMessage = '✓ ${changedFields.join(', ')} updated';
-        } else {
-          notificationMessage = '✓ Trip updated (${changedFields.length} fields)';
-        }
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(notificationMessage),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 2),
-          ),
-        );
-      },
-    ),
-  );
-}
+  void _editTripDetails() {
+    showDialog(
+      context: context,
+      builder: (context) => EditTripModal(
+        trip: currentTrip,
+        onSave: (Trip updatedTrip) {
+          List<String> changedFields = [];
+          
+          if (updatedTrip.title != currentTrip.title) {
+            changedFields.add('Title');
+          }
+          if (updatedTrip.destination != currentTrip.destination) {
+            changedFields.add('Destination');
+          }
+          if (updatedTrip.startDate != currentTrip.startDate) {
+            changedFields.add('Start Date');
+          }
+          if (updatedTrip.endDate != currentTrip.endDate) {
+            changedFields.add('End Date');
+          }
+          if (updatedTrip.budget != currentTrip.budget) {
+            changedFields.add('Budget');
+          }
+          
+          setState(() {
+            currentTrip = updatedTrip;
+          });
+          
+          String notificationMessage;
+          if (changedFields.isEmpty) {
+            notificationMessage = '✓ No changes made';
+          } else if (changedFields.length == 1) {
+            notificationMessage = '✓ ${changedFields[0]} updated';
+          } else if (changedFields.length <= 3) {
+            notificationMessage = '✓ ${changedFields.join(', ')} updated';
+          } else {
+            notificationMessage = '✓ Trip updated (${changedFields.length} fields)';
+          }
+          
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(notificationMessage),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 2),
+            ),
+          );
+        },
+      ),
+    );
+  }
 }
