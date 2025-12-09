@@ -165,7 +165,8 @@ class _CreateTripModalState extends State<CreateTripModal> {
       ),
       builder: (BuildContext context) {
         return Container(
-          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+        //  padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 40.h),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -290,59 +291,55 @@ class _CreateTripModalState extends State<CreateTripModal> {
 
   @override
   Widget build(BuildContext context) {
-    final currentImagePath = _selectedImage?.path;
-
     return Dialog(
-      backgroundColor: Colors.transparent,
-      insetPadding: EdgeInsets.symmetric(horizontal: 20.w),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20.r),
-        ),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
-                decoration: BoxDecoration(
-                  color: AppColors.brownPrimary,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(20.r),
-                    topRight: Radius.circular(20.r),
+      insetPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 50.h),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20.r),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Header
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 14.h),
+            decoration: BoxDecoration(
+              color: AppColors.brownPrimary,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Plan New Trip',
+                  style: GoogleFonts.poppins(
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
                   ),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Plan New Trip',
-                      style: GoogleFonts.poppins(
-                        fontSize: 18.sp,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () => Navigator.pop(context),
-                      child: Icon(Icons.close, color: Colors.white, size: 24.sp),
-                    ),
-                  ],
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Icon(Icons.close, color: Colors.white, size: 24.sp),
                 ),
-              ),
-              Padding(
-                padding: EdgeInsets.all(24.w),
+              ],
+            ),
+          ),
+          // Scrollable Content
+          Expanded(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Trip Image
                     Text(
-                      'Trip Image',
+                      'Cover Photo',
                       style: GoogleFonts.poppins(fontSize: 14.sp, fontWeight: FontWeight.w500),
                     ),
-                    SizedBox(height: 10.h),
+                    SizedBox(height: 15.h),
                     GestureDetector(
                       onTap: _showImageOptionsBottomSheet,
                       child: Container(
@@ -352,72 +349,79 @@ class _CreateTripModalState extends State<CreateTripModal> {
                           color: Colors.grey.shade100,
                           borderRadius: BorderRadius.circular(12.r),
                           border: Border.all(
-                            color: currentImagePath != null ? AppColors.brownPrimary : Colors.grey.shade300,
+                            color: _selectedImage != null ? AppColors.brownPrimary : Colors.grey.shade300,
                             width: 2,
                           ),
                         ),
-                        child: currentImagePath != null
+                        child: _selectedImage != null
                             ? ClipRRect(
                                 borderRadius: BorderRadius.circular(12.r),
-                                child: Image.file(File(currentImagePath), fit: BoxFit.cover),
+                                child: Image.file(File(_selectedImage!.path), fit: BoxFit.cover),
                               )
                             : Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(Icons.add_photo_alternate_outlined, size: 48.sp, color: AppColors.brownPrimary),
-                                  SizedBox(height: 12.h),
+                                  Icon(Icons.add_photo_alternate_outlined, size: 36.sp, color: AppColors.brownPrimary),
+                                  SizedBox(height: 20.h, width: 20.w,),
                                   Text(
                                     'Tap to add image',
                                     style: GoogleFonts.poppins(
-                                      fontSize: 14.sp,
+                                      fontSize: 12.sp,
                                       color: AppColors.brownPrimary,
                                       fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Gallery or Camera',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 12.sp,
+                                      color: Colors.grey.shade500,
                                     ),
                                   ),
                                 ],
                               ),
                       ),
                     ),
-                    SizedBox(height: 20.h),
+                    SizedBox(height: 12.h),
 
                     // Trip Title
                     Text('Trip Title', style: GoogleFonts.poppins(fontSize: 14.sp, fontWeight: FontWeight.w500)),
-                    SizedBox(height: 10.h),
+                    SizedBox(height: 6.h),
                     TextField(
                       controller: titleController,
                       decoration: InputDecoration(
-                        hintText: 'e.g., Summer Adventure',
+                        hintText: 'e.g., Summer Cebu Adventure',
                         filled: true,
                         fillColor: Colors.grey.shade100,
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12.r),
+                          borderRadius: BorderRadius.circular(10.r),
                           borderSide: BorderSide.none,
                         ),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
                       ),
                     ),
-                    SizedBox(height: 20.h),
+                    SizedBox(height: 10.h),
 
                     // Destination
                     Text('Destination', style: GoogleFonts.poppins(fontSize: 14.sp, fontWeight: FontWeight.w500)),
-                    SizedBox(height: 10.h),
+                    SizedBox(height: 6.h),
                     TextField(
                       controller: destinationController,
                       decoration: InputDecoration(
                         hintText: 'e.g., Cebu, Philippines',
-                        prefixIcon: Icon(Icons.location_on, color: AppColors.brownPrimary),
+                        prefixIcon: Icon(Icons.location_on, color: AppColors.brownPrimary, size: 20.sp),
                         filled: true,
                         fillColor: Colors.grey.shade100,
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12.r),
+                          borderRadius: BorderRadius.circular(10.r),
                           borderSide: BorderSide.none,
                         ),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
                       ),
                     ),
-                    SizedBox(height: 20.h),
+                    SizedBox(height: 10.h),
 
-                    // Dates
+                    // Dates Row
                     Row(
                       children: [
                         Expanded(
@@ -425,45 +429,47 @@ class _CreateTripModalState extends State<CreateTripModal> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text('Start Date', style: GoogleFonts.poppins(fontSize: 14.sp, fontWeight: FontWeight.w500)),
-                              SizedBox(height: 10.h),
+                              SizedBox(height: 6.h),
                               TextField(
                                 controller: startDateController,
                                 readOnly: true,
                                 onTap: _selectStartDate,
                                 decoration: InputDecoration(
-                                  prefixIcon: Icon(Icons.calendar_today, color: AppColors.brownPrimary),
+                                  prefixIcon: Icon(Icons.calendar_today, color: AppColors.brownPrimary, size: 18.sp),
+                                  hintText: 'Select d...',
                                   filled: true,
                                   fillColor: Colors.grey.shade100,
                                   border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12.r),
+                                    borderRadius: BorderRadius.circular(10.r),
                                     borderSide: BorderSide.none,
                                   ),
-                                  contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+                                  contentPadding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 10.h),
                                 ),
                               ),
                             ],
                           ),
                         ),
-                        SizedBox(width: 16.w),
+                        SizedBox(width: 10.w),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text('End Date', style: GoogleFonts.poppins(fontSize: 14.sp, fontWeight: FontWeight.w500)),
-                              SizedBox(height: 10.h),
+                              SizedBox(height: 6.h),
                               TextField(
                                 controller: endDateController,
                                 readOnly: true,
                                 onTap: _selectEndDate,
                                 decoration: InputDecoration(
-                                  prefixIcon: Icon(Icons.calendar_today, color: AppColors.brownPrimary),
+                                  prefixIcon: Icon(Icons.calendar_today, color: AppColors.brownPrimary, size: 18.sp),
+                                  hintText: 'Select d...',
                                   filled: true,
                                   fillColor: Colors.grey.shade100,
                                   border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12.r),
+                                    borderRadius: BorderRadius.circular(10.r),
                                     borderSide: BorderSide.none,
                                   ),
-                                  contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+                                  contentPadding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 10.h),
                                 ),
                               ),
                             ],
@@ -471,99 +477,31 @@ class _CreateTripModalState extends State<CreateTripModal> {
                         ),
                       ],
                     ),
-                    SizedBox(height: 20.h),
-
-                    // Departure & Arrival Times
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Departure Time', style: GoogleFonts.poppins(fontSize: 14.sp, fontWeight: FontWeight.w500)),
-                              SizedBox(height: 10.h),
-                              TextField(
-                                controller: departureTimeController,
-                                readOnly: true,
-                                onTap: _selectDepartureTime,
-                                decoration: InputDecoration(
-                                  prefixIcon: Icon(Icons.access_time, color: AppColors.brownPrimary),
-                                  suffixIcon: departureTimeController.text.isNotEmpty
-                                      ? GestureDetector(
-                                          onTap: _clearDepartureTime,
-                                          child: Icon(Icons.close, color: Colors.red, size: 18.sp),
-                                        )
-                                      : null,
-                                  filled: true,
-                                  fillColor: Colors.grey.shade100,
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12.r),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                  contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(width: 16.w),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Arrival Time', style: GoogleFonts.poppins(fontSize: 14.sp, fontWeight: FontWeight.w500)),
-                              SizedBox(height: 10.h),
-                              TextField(
-                                controller: arrivalTimeController,
-                                readOnly: true,
-                                onTap: _selectArrivalTime,
-                                decoration: InputDecoration(
-                                  prefixIcon: Icon(Icons.access_time, color: AppColors.brownPrimary),
-                                  suffixIcon: arrivalTimeController.text.isNotEmpty
-                                      ? GestureDetector(
-                                          onTap: _clearArrivalTime,
-                                          child: Icon(Icons.close, color: Colors.red, size: 18.sp),
-                                        )
-                                      : null,
-                                  filled: true,
-                                  fillColor: Colors.grey.shade100,
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12.r),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                  contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 20.h),
+                    SizedBox(height: 10.h),
 
                     // Budget
                     Text('Initial Budget (₱)', style: GoogleFonts.poppins(fontSize: 14.sp, fontWeight: FontWeight.w500)),
-                    SizedBox(height: 10.h),
+                    SizedBox(height: 6.h),
                     TextField(
                       controller: budgetController,
                       keyboardType: TextInputType.number,
                       decoration: InputDecoration(
-                        hintText: '10000',
+                        hintText: '000.00',
                         prefixIcon: Padding(
-                          padding: EdgeInsets.only(left: 12.w, right: 8.w),
-                          child: Text('₱', style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.w600, color: AppColors.brownPrimary)),
+                          padding: EdgeInsets.only(left: 10.w, right: 6.w),
+                          child: Text('₱', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600, color: AppColors.brownPrimary)),
                         ),
-                        prefixIconConstraints: BoxConstraints(minWidth: 40.w),
+                        prefixIconConstraints: BoxConstraints(minWidth: 32.w),
                         filled: true,
                         fillColor: Colors.grey.shade100,
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12.r),
+                          borderRadius: BorderRadius.circular(10.r),
                           borderSide: BorderSide.none,
                         ),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 10.h),
                       ),
                     ),
-                    SizedBox(height: 24.h),
+                    SizedBox(height: 14.h),
 
                     // Create Button
                     SizedBox(
@@ -572,13 +510,13 @@ class _CreateTripModalState extends State<CreateTripModal> {
                         onPressed: _createTrip,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.brownPrimary,
-                          padding: EdgeInsets.symmetric(vertical: 14.h),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+                          padding: EdgeInsets.symmetric(vertical: 11.h),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
                         ),
                         child: Text(
                           'Start Adventure',
                           style: GoogleFonts.poppins(
-                            fontSize: 16.sp,
+                            fontSize: 15.sp,
                             fontWeight: FontWeight.w600,
                             color: Colors.white,
                           ),
@@ -588,9 +526,9 @@ class _CreateTripModalState extends State<CreateTripModal> {
                   ],
                 ),
               ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
