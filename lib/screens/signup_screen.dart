@@ -1,11 +1,17 @@
-// lib/screens/signup_screen.dart
+// ============================================
+// UPDATED SIGNUP_SCREEN.DART - CAPTURE NICKNAME
+// ============================================
+
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';  // ← ADD THIS
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../core/app_colors.dart';
 import '../widgets/custom_textfield.dart';
+import '../widgets/success_modal.dart';
+import 'login_screen.dart';
+
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -14,18 +20,99 @@ class SignUpScreen extends StatefulWidget {
   State<SignUpScreen> createState() => _SignUpScreenState();
 }
 
+
 class _SignUpScreenState extends State<SignUpScreen> {
+  // ✅ NEW: TextEditingControllers for form inputs
+  final TextEditingController nicknameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController confirmPasswordController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
-    // Set status bar to light background with dark icons
     SystemChrome.setSystemUIOverlayStyle(
       SystemUiOverlayStyle(
-        statusBarColor: Color(0xFFF5F5F5),  // Light gray background
-        statusBarIconBrightness: Brightness.dark,  // Dark icons
+        statusBarColor: Color(0xFFF5F5F5),
+        statusBarIconBrightness: Brightness.dark,
         statusBarBrightness: Brightness.light,
         systemNavigationBarColor: Colors.white,
         systemNavigationBarIconBrightness: Brightness.dark,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    // ✅ NEW: Dispose controllers
+    nicknameController.dispose();
+    emailController.dispose();
+    passwordController.dispose();
+    confirmPasswordController.dispose();
+    super.dispose();
+  }
+
+  // ✅ NEW METHOD: Validate and create account
+  void _handleSignUp() {
+    String nickname = nicknameController.text.trim();
+    String email = emailController.text.trim();
+    String password = passwordController.text.trim();
+    String confirmPassword = confirmPasswordController.text.trim();
+
+    // Validation
+    if (nickname.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter your nickname')),
+      );
+      return;
+    }
+
+    if (email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter your email')),
+      );
+      return;
+    }
+
+    if (password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a password')),
+      );
+      return;
+    }
+
+    if (password != confirmPassword) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Passwords do not match')),
+      );
+      return;
+    }
+
+    if (password.length < 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Password must be at least 6 characters')),
+      );
+      return;
+    }
+
+    // Show success modal
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) => SuccessModal(
+        title: 'Account Created!',
+        message: 'Welcome $nickname! Your account has been successfully created.',
+        buttonText: 'Continue to Login',
+        onConfirm: () {
+          // ✅ Navigate to LoginScreen and pass nickname
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(
+              builder: (context) => LoginScreen(userNickname: nickname),
+            ),
+            (route) => false,
+          );
+        },
       ),
     );
   }
@@ -66,23 +153,31 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   child: Column(
                     children: [
                       CustomTextField(
-                          hintText: 'Your Full Name',
-                          icon: Icons.person_outline),
+                        hintText: 'Nickname',
+                        icon: Icons.person_outline,
+                        controller: nicknameController, // ✅ ADDED
+                      ),
                       CustomTextField(
-                          hintText: 'Your@email.com',
-                          icon: Icons.email_outlined),
+                        hintText: 'Your@email.com',
+                        icon: Icons.email_outlined,
+                        controller: emailController, // ✅ ADDED
+                      ),
                       CustomTextField(
-                          hintText: 'Create a strong password',
-                          icon: Icons.lock_outline,
-                          isPassword: true),
+                        hintText: 'Create a strong password',
+                        icon: Icons.lock_outline,
+                        isPassword: true,
+                        controller: passwordController, // ✅ ADDED
+                      ),
                       CustomTextField(
-                          hintText: 'Re-enter your password',
-                          icon: Icons.lock_outline,
-                          isPassword: true),
+                        hintText: 'Re-enter your password',
+                        icon: Icons.lock_outline,
+                        isPassword: true,
+                        controller: confirmPasswordController, // ✅ ADDED
+                      ),
 
                       SizedBox(height: 30.h),
                       ElevatedButton(
-                        onPressed: () {},
+                        onPressed: _handleSignUp, // ✅ CHANGED
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.brownPrimary,
                           minimumSize: Size(double.infinity, 60.h),
