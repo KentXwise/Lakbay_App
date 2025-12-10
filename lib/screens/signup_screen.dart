@@ -1,7 +1,3 @@
-// ============================================
-// UPDATED SIGNUP_SCREEN.DART - CAPTURE NICKNAME
-// ============================================
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -12,7 +8,6 @@ import '../widgets/custom_textfield.dart';
 import '../widgets/success_modal.dart';
 import 'login_screen.dart';
 
-
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
 
@@ -20,20 +15,22 @@ class SignUpScreen extends StatefulWidget {
   State<SignUpScreen> createState() => _SignUpScreenState();
 }
 
-
 class _SignUpScreenState extends State<SignUpScreen> {
-  // ✅ NEW: TextEditingControllers for form inputs
   final TextEditingController nicknameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController = TextEditingController();
+  final TextEditingController confirmPasswordController =
+      TextEditingController();
+
+  bool _showPassword = false;
+  bool _showConfirmPassword = false;
 
   @override
   void initState() {
     super.initState();
     SystemChrome.setSystemUIOverlayStyle(
       SystemUiOverlayStyle(
-        statusBarColor: Color(0xFFF5F5F5),
+        statusBarColor: const Color(0xFFF5F5F5),
         statusBarIconBrightness: Brightness.dark,
         statusBarBrightness: Brightness.light,
         systemNavigationBarColor: Colors.white,
@@ -44,7 +41,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
   void dispose() {
-    // ✅ NEW: Dispose controllers
     nicknameController.dispose();
     emailController.dispose();
     passwordController.dispose();
@@ -52,14 +48,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
     super.dispose();
   }
 
-  // ✅ NEW METHOD: Validate and create account
   void _handleSignUp() {
     String nickname = nicknameController.text.trim();
     String email = emailController.text.trim();
     String password = passwordController.text.trim();
     String confirmPassword = confirmPasswordController.text.trim();
 
-    // Validation
     if (nickname.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please enter your nickname')),
@@ -90,21 +84,21 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     if (password.length < 6) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Password must be at least 6 characters')),
+        const SnackBar(
+            content: Text('Password must be at least 6 characters')),
       );
       return;
     }
 
-    // Show success modal
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) => SuccessModal(
         title: 'Account Created!',
-        message: 'Welcome $nickname! Your account has been successfully created.',
+        message:
+            'Welcome $nickname! Your account has been successfully created.',
         buttonText: 'Continue to Login',
         onConfirm: () {
-          // ✅ Navigate to LoginScreen and pass nickname
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(
@@ -129,16 +123,22 @@ class _SignUpScreenState extends State<SignUpScreen> {
               child: SvgPicture.asset('assets/images/Lakbay_Logo.svg',
                   height: 90.h, color: Colors.white.withOpacity(0.9)),
             ),
-            Text('Create Account',
-                style: GoogleFonts.poppins(
-                    fontSize: 32.sp,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white)),
-            Text('Start your travel adventure today',
-                style: GoogleFonts.poppins(fontSize: 16.sp, color: Colors.white70)),
-
+            Text(
+              'Create Account',
+              style: GoogleFonts.poppins(
+                fontSize: 32.sp,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            Text(
+              'Start your travel adventure today',
+              style: GoogleFonts.poppins(
+                fontSize: 16.sp,
+                color: Colors.white70,
+              ),
+            ),
             SizedBox(height: 30.h),
-
             Expanded(
               child: Container(
                 decoration: BoxDecoration(
@@ -155,84 +155,164 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       CustomTextField(
                         hintText: 'Nickname',
                         icon: Icons.person_outline,
-                        controller: nicknameController, // ✅ ADDED
+                        controller: nicknameController,
                       ),
+                      SizedBox(height: 16.h),
                       CustomTextField(
                         hintText: 'Your@email.com',
                         icon: Icons.email_outlined,
-                        controller: emailController, // ✅ ADDED
+                        controller: emailController,
                       ),
-                      CustomTextField(
-                        hintText: 'Create a strong password',
-                        icon: Icons.lock_outline,
-                        isPassword: true,
-                        controller: passwordController, // ✅ ADDED
+                      SizedBox(height: 16.h),
+                      TextField(
+                        controller: passwordController,
+                        obscureText: !_showPassword,
+                        decoration: InputDecoration(
+                          hintText: 'Create a strong password',
+                          hintStyle: GoogleFonts.poppins(
+                            fontSize: 14.sp,
+                            color: AppColors.textGray,
+                          ),
+                          prefixIcon: Icon(Icons.lock_outline,
+                              color: AppColors.brownPrimary),
+                          suffixIcon: GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _showPassword = !_showPassword;
+                              });
+                            },
+                            child: Icon(
+                              _showPassword
+                                  ? Icons.visibility
+                                  : Icons.visibility_off,
+                              color: AppColors.brownPrimary,
+                            ),
+                          ),
+                          filled: true,
+                          fillColor: Colors.grey.shade100,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12.r),
+                            borderSide: BorderSide.none,
+                          ),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 16.w,
+                            vertical: 16.h,
+                          ),
+                        ),
                       ),
-                      CustomTextField(
-                        hintText: 'Re-enter your password',
-                        icon: Icons.lock_outline,
-                        isPassword: true,
-                        controller: confirmPasswordController, // ✅ ADDED
+                      SizedBox(height: 16.h),
+                      TextField(
+                        controller: confirmPasswordController,
+                        obscureText: !_showConfirmPassword,
+                        decoration: InputDecoration(
+                          hintText: 'Re-enter your password',
+                          hintStyle: GoogleFonts.poppins(
+                            fontSize: 14.sp,
+                            color: AppColors.textGray,
+                          ),
+                          prefixIcon: Icon(Icons.lock_outline,
+                              color: AppColors.brownPrimary),
+                          suffixIcon: GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _showConfirmPassword =
+                                    !_showConfirmPassword;
+                              });
+                            },
+                            child: Icon(
+                              _showConfirmPassword
+                                  ? Icons.visibility
+                                  : Icons.visibility_off,
+                              color: AppColors.brownPrimary,
+                            ),
+                          ),
+                          filled: true,
+                          fillColor: Colors.grey.shade100,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12.r),
+                            borderSide: BorderSide.none,
+                          ),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 16.w,
+                            vertical: 16.h,
+                          ),
+                        ),
                       ),
-
                       SizedBox(height: 30.h),
                       ElevatedButton(
-                        onPressed: _handleSignUp, // ✅ CHANGED
+                        onPressed: _handleSignUp,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.brownPrimary,
                           minimumSize: Size(double.infinity, 60.h),
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30.r)),
+                            borderRadius: BorderRadius.circular(30.r),
+                          ),
                         ),
-                        child: Text('Create Account',
-                            style: GoogleFonts.poppins(
-                                fontSize: 18.sp,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white)),
+                        child: Text(
+                          'Create Account',
+                          style: GoogleFonts.poppins(
+                            fontSize: 18.sp,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
                       ),
-
                       SizedBox(height: 30.h),
-                      Text('Or sign up with',
-                          style: GoogleFonts.poppins(color: AppColors.textGray)),
-
+                      Text(
+                        'Or sign up with',
+                        style:
+                            GoogleFonts.poppins(color: AppColors.textGray),
+                      ),
                       SizedBox(height: 20.h),
                       OutlinedButton.icon(
                         onPressed: () {},
                         icon: SvgPicture.asset('assets/icons/google.svg',
                             height: 24.h),
-                        label: Text('Continue with Google',
-                            style: GoogleFonts.poppins(
-                                fontSize: 16.sp, color: Colors.black87)),
+                        label: Text(
+                          'Continue with Google',
+                          style: GoogleFonts.poppins(
+                            fontSize: 16.sp,
+                            color: Colors.black87,
+                          ),
+                        ),
                         style: OutlinedButton.styleFrom(
                           minimumSize: Size(double.infinity, 60.h),
                           side: BorderSide(color: Colors.brown.shade200),
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30.r)),
+                            borderRadius: BorderRadius.circular(30.r),
+                          ),
                         ),
                       ),
-
                       SizedBox(height: 30.h),
                       Text(
                         'By signing up, you agree to our Terms of Service and Privacy Policy',
                         textAlign: TextAlign.center,
                         style: GoogleFonts.poppins(
-                            fontSize: 12.sp, color: AppColors.textGray),
+                          fontSize: 12.sp,
+                          color: AppColors.textGray,
+                        ),
                       ),
-
                       SizedBox(height: 20.h),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text('Already have an account? ',
-                              style: GoogleFonts.poppins(color: Colors.black87)),
+                          Text(
+                            'Already have an account? ',
+                            style: GoogleFonts.poppins(
+                              color: Colors.black87,
+                            ),
+                          ),
                           GestureDetector(
                             onTap: () {
                               Navigator.pop(context);
                             },
-                            child: Text('Sign In',
-                                style: GoogleFonts.poppins(
-                                    color: AppColors.brownPrimary,
-                                    fontWeight: FontWeight.w600)),
+                            child: Text(
+                              'Sign In',
+                              style: GoogleFonts.poppins(
+                                color: AppColors.brownPrimary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                           ),
                         ],
                       ),
