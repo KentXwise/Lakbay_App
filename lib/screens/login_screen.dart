@@ -7,7 +7,7 @@ import '../core/app_colors.dart';
 import '../widgets/custom_textfield.dart';
 import 'signup_screen.dart';
 import '../widgets/forgot_password_modal.dart';
-import 'home_screen.dart';
+import 'memories_screen.dart';
 import '../widgets/success_modal.dart';
 
 class LoginScreen extends StatefulWidget {

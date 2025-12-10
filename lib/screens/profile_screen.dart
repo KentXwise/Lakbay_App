@@ -6,15 +6,20 @@ import '../core/app_colors.dart';
 import '../widgets/logout_confirmation_modal.dart';
 import '../widgets/edit_profile_modal.dart';
 import 'login_screen.dart';
+import 'memories_screen.dart';
+
 
 class ProfileScreen extends StatefulWidget {
   final String? userNickname;
 
+
   const ProfileScreen({super.key, this.userNickname});
+
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
+
 
 class _ProfileScreenState extends State<ProfileScreen> {
   // Profile Data
@@ -25,6 +30,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   late String userBirthdate;
   late String userBio;
   File? _profileImage;
+
 
   @override
   void initState() {
@@ -37,6 +43,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     userBirthdate = 'MM/DD/YYYY';
     userBio = 'Add a bio to let others know about you!';
   }
+
 
   void _showEditProfileModal(BuildContext context) {
     showDialog(
@@ -69,6 +76,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+
   void _showLogoutConfirmation(BuildContext context) {
     showDialog(
       context: context,
@@ -81,6 +89,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
+
 
   Future<void> _handleLogout(BuildContext context) async {
     try {
@@ -99,14 +108,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Logout failed: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Logout failed: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -130,7 +142,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   GestureDetector(
-                    onTap: () => Navigator.pop(context),
+                    onTap: () {
+                      // Navigate back to home_screen.dart instead of pop
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => HomeScreen(
+                            userNickname: widget.userNickname ?? 'User',
+                          ),
+                        ),
+                        (route) => false,
+                      );
+                    },
                     child: Icon(
                       Icons.arrow_back,
                       color: Colors.white,
@@ -210,6 +233,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
 
+
             // Settings List
             Expanded(
               child: ListView(
@@ -225,6 +249,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
                   SizedBox(height: 12.h),
+
 
                   // Profile Details Card
                   Container(
@@ -253,6 +278,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
                   SizedBox(height: 20.h),
+
 
                   // Bio Section
                   Text(
@@ -285,6 +311,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
                   SizedBox(height: 24.h),
+
 
                   // Account Settings Section
                   Text(
@@ -320,6 +347,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   SizedBox(height: 24.h),
 
+
                   // Support Section
                   Text(
                     'Support',
@@ -348,6 +376,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   SizedBox(height: 24.h),
 
+
                   // Logout Button
                   SizedBox(
                     width: double.infinity,
@@ -373,6 +402,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   SizedBox(height: 16.h),
 
+
                   // Version Info
                   Center(
                     child: Text(
@@ -392,6 +422,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
+
 
   // Helper widget to display profile details
   Widget _buildDetailRow(String label, String value, IconData icon) {
@@ -428,6 +459,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ],
     );
   }
+
 
   Widget _buildSettingCard({
     required IconData icon,
