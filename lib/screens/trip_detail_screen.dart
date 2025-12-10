@@ -13,28 +13,34 @@ import '../screens/tasks_screen.dart';
 import '../models/task_model.dart';
 import '../screens/trip_receipt_screen.dart';
 
+
 class TripDetailScreen extends StatefulWidget {
   final Trip trip;
 
+
   const TripDetailScreen({super.key, required this.trip});
+
 
   @override
   State<TripDetailScreen> createState() => _TripDetailScreenState();
 }
+
 
 class _TripDetailScreenState extends State<TripDetailScreen> {
   late String selectedTab;
   late List<Activity> activities;
   late Trip currentTrip;
 
-void _showTripReceipt() {
+
+  void _showTripReceipt() {
     Navigator.push(
-    context,
-    MaterialPageRoute(
-    builder: (context) => TripReceiptScreen(trip: currentTrip),
-    ),
+      context,
+      MaterialPageRoute(
+        builder: (context) => TripReceiptScreen(trip: currentTrip),
+      ),
     );
-    }
+  }
+
 
   @override
   void initState() {
@@ -43,6 +49,7 @@ void _showTripReceipt() {
     activities = [];
     currentTrip = widget.trip;
   }
+
 
   int _calculateTripDays() {
     try {
@@ -67,6 +74,7 @@ void _showTripReceipt() {
       return 3;
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -124,20 +132,20 @@ void _showTripReceipt() {
                     ),
                   ),
                 ),
-               Positioned(
-                top: 16.h,
-                right: 60.w,
-                child: GestureDetector(
-                onTap: () => _showTripReceipt(),
-                child: Container(
-                decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.black.withOpacity(0.3),
-                ),
-                padding: EdgeInsets.all(8.w),
-                child: Icon(Icons.download, color: Colors.white, size: 20.sp),
-                ),
-                ),
+                Positioned(
+                  top: 16.h,
+                  right: 60.w,
+                  child: GestureDetector(
+                    onTap: () => _showTripReceipt(),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.black.withOpacity(0.3),
+                      ),
+                      padding: EdgeInsets.all(8.w),
+                      child: Icon(Icons.receipt, color: Colors.white, size: 20.sp),
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -254,6 +262,7 @@ void _showTripReceipt() {
     );
   }
 
+
   Widget _buildTab(String tabName) {
     bool isSelected = selectedTab == tabName;
     return Expanded(
@@ -280,6 +289,7 @@ void _showTripReceipt() {
       ),
     );
   }
+
 
   Widget _buildItineraryContent() {
     return Padding(
@@ -327,8 +337,10 @@ void _showTripReceipt() {
     );
   }
 
+
   List<Widget> _buildActivitiesByDay() {
     List<Widget> widgets = [];
+
 
     if (activities.isEmpty) {
       widgets.add(
@@ -354,6 +366,7 @@ void _showTripReceipt() {
         groupedByDay[activity.day]!.add(activity);
       }
 
+
       final sortedDays = groupedByDay.keys.toList()
         ..sort((a, b) {
           final aNum = int.tryParse(a.replaceAll(RegExp(r'\D'), '')) ?? 0;
@@ -361,14 +374,17 @@ void _showTripReceipt() {
           return aNum.compareTo(bNum);
         });
 
+
       for (var day in sortedDays) {
         final dayActivities = groupedByDay[day]!;
+
 
         dayActivities.sort((a, b) {
           final timeA = _parseTime(a.time);
           final timeB = _parseTime(b.time);
           return timeA.compareTo(timeB);
         });
+
 
         widgets.add(
           Padding(
@@ -384,6 +400,7 @@ void _showTripReceipt() {
           ),
         );
 
+
         for (var activity in dayActivities) {
           widgets.add(_buildActivityCard(activity));
           widgets.add(SizedBox(height: 12.h));
@@ -391,8 +408,10 @@ void _showTripReceipt() {
       }
     }
 
+
     return widgets;
   }
+
 
   int _parseTime(String timeString) {
     try {
@@ -400,9 +419,11 @@ void _showTripReceipt() {
       final timePart = parts[0];
       final period = parts.length > 1 ? parts[1] : 'AM';
 
+
       final timeSplit = timePart.split(':');
       int hour = int.parse(timeSplit[0]);
       int minute = int.parse(timeSplit.length > 1 ? timeSplit[1] : '0');
+
 
       if (period == 'AM') {
         if (hour == 12) hour = 0;
@@ -410,11 +431,13 @@ void _showTripReceipt() {
         if (hour != 12) hour += 12;
       }
 
+
       return hour * 60 + minute;
     } catch (e) {
       return 0;
     }
   }
+
 
   Widget _buildActivityCard(Activity activity) {
     return GestureDetector(
@@ -505,6 +528,7 @@ void _showTripReceipt() {
     );
   }
 
+
   Widget _buildBudgetContent() {
     return BudgetScreen(
       trip: currentTrip,
@@ -515,6 +539,7 @@ void _showTripReceipt() {
       },
     );
   }
+
 
   Widget _buildMembersContent() {
     return MembersScreen(
@@ -527,6 +552,7 @@ void _showTripReceipt() {
     );
   }
 
+
   Widget _buildTaskContent() {
     return TasksScreen(
       trip: currentTrip,
@@ -537,6 +563,7 @@ void _showTripReceipt() {
       },
     );
   }
+
 
   void _addActivity() {
     int tripDays = _calculateTripDays();
@@ -565,6 +592,7 @@ void _showTripReceipt() {
     );
   }
 
+
   void _showActivityOptions(Activity activity) {
     showModalBottomSheet(
       context: context,
@@ -592,6 +620,7 @@ void _showTripReceipt() {
       ),
     );
   }
+
 
   void _editActivity(Activity activity) {
     int tripDays = _calculateTripDays();
@@ -622,6 +651,7 @@ void _showTripReceipt() {
     );
   }
 
+
   void _deleteActivity(Activity activity) {
     setState(() {
       activities.removeWhere((a) => a.id == activity.id);
@@ -630,6 +660,7 @@ void _showTripReceipt() {
       SnackBar(content: Text('Activity deleted')),
     );
   }
+
 
   void _editTripDetails() {
     showDialog(
