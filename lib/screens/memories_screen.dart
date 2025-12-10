@@ -42,30 +42,8 @@ class _HomeScreenState extends State<HomeScreen> {
     ),
   ];
 
-  // Mock memory data
-  List<Map<String, dynamic>> memories = [
-    {
-      'id': 1,
-      'image': 'assets/images/photo1.jpg',
-      'title': 'Beach Trip',
-      'description': 'Amazing beach day',
-      'imageFile': null
-    },
-    {
-      'id': 2,
-      'image': 'assets/images/photo2.jpg',
-      'title': 'Mountain View',
-      'description': 'Peak of adventure',
-      'imageFile': null
-    },
-    {
-      'id': 3,
-      'image': 'assets/images/photo3.jpg',
-      'title': 'City Lights',
-      'description': 'Night in the city',
-      'imageFile': null
-    },
-  ];
+  // Empty memories list - no mock data
+  List<Map<String, dynamic>> memories = [];
 
   @override
   Widget build(BuildContext context) {
@@ -215,35 +193,137 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         Expanded(
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                SizedBox(height: 32.h),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 24.w),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      'Your Memories',
-                      style: GoogleFonts.poppins(
-                        fontSize: 18.sp,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.brownPrimary,
+          child: memories.isEmpty
+              ? _buildEmptyMemoriesState()
+              : SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      SizedBox(height: 32.h),
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 24.w),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            'Your Memories',
+                            style: GoogleFonts.poppins(
+                              fontSize: 18.sp,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.brownPrimary,
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
+                      SizedBox(height: 20.h),
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 24.w),
+                        child: _buildMasonryGallery(),
+                      ),
+                      SizedBox(height: 32.h),
+                    ],
                   ),
                 ),
-                SizedBox(height: 20.h),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 24.w),
-                  child: _buildMasonryGallery(),
-                ),
-                SizedBox(height: 32.h),
-              ],
-            ),
-          ),
         ),
       ],
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // EMPTY MEMORIES STATE - New User Experience
+  // ═══════════════════════════════════════════════════════════════════
+  Widget _buildEmptyMemoriesState() {
+    return Center(
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 24.w),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 100.w,
+                height: 100.h,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF5E6D3),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.photo_camera_back,
+                  size: 56.sp,
+                  color: AppColors.brownPrimary,
+                ),
+              ),
+              SizedBox(height: 24.h),
+              Text(
+                'No Memories Yet',
+                style: GoogleFonts.poppins(
+                  fontSize: 20.sp,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.brownPrimary,
+                ),
+              ),
+              SizedBox(height: 12.h),
+              Text(
+                'Start capturing and sharing your travel moments',
+                style: GoogleFonts.poppins(
+                  fontSize: 14.sp,
+                  color: Colors.grey.shade600,
+                  height: 1.5,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 8.h),
+              Text(
+                'Tap to add your first photo',
+                style: GoogleFonts.poppins(
+                  fontSize: 12.sp,
+                  color: Colors.grey.shade400,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+              SizedBox(height: 40.h),
+              GestureDetector(
+                onTap: _showPhotoActionSheet,
+                child: Container(
+                  width: 160.w,
+                  decoration: BoxDecoration(
+                    color: AppColors.brownPrimary,
+                    borderRadius: BorderRadius.circular(16.r),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.brownPrimary.withOpacity(0.3),
+                        blurRadius: 16,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 24.w,
+                    vertical: 14.h,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.add,
+                        color: Colors.white,
+                        size: 20.sp,
+                      ),
+                      SizedBox(width: 8.w),
+                      Text(
+                        'Add Photo',
+                        style: GoogleFonts.poppins(
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -752,7 +832,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ═══════════════════════════════════════════════════════════════════
-  // MASONRY GALLERY
+  // MASONRY GALLERY - Only shown when memories exist
   // ═══════════════════════════════════════════════════════════════════
   Widget _buildMasonryGallery() {
     return Row(
@@ -763,7 +843,7 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               if (memories.isNotEmpty)
                 _buildMemoryCard(memories[0], height: 220.h),
-              SizedBox(height: 16.h),
+              if (memories.length > 1) SizedBox(height: 16.h),
               if (memories.length > 2)
                 _buildMemoryCard(memories[2], height: 220.h),
             ],
@@ -775,7 +855,7 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               if (memories.length > 1)
                 _buildMemoryCard(memories[1], height: 180.h),
-              SizedBox(height: 16.h),
+              if (memories.isNotEmpty) SizedBox(height: 16.h),
               _buildAddPhotoCard(),
             ],
           ),
@@ -896,7 +976,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ═══════════════════════════════════════════════════════════════════
-  // ADD PHOTO CARD
+  // ADD PHOTO CARD - Fully Functional
   // ═══════════════════════════════════════════════════════════════════
   Widget _buildAddPhotoCard() {
     return GestureDetector(
@@ -983,7 +1063,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ═══════════════════════════════════════════════════════════════════
-  // VIEW MEMORY - Read-Only Modal
+  // VIEW MEMORY - Read-Only Modal (Tap)
   // ═══════════════════════════════════════════════════════════════════
   void _viewMemory(Map<String, dynamic> memory) {
     showDialog(
@@ -1067,7 +1147,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ═══════════════════════════════════════════════════════════════════
-  // MEMORY ACTION SHEET - Long Press
+  // MEMORY ACTION SHEET - Long Press (Edit, Delete)
   // ═══════════════════════════════════════════════════════════════════
   void _showMemoryActionSheet(Map<String, dynamic> memory) {
     showModalBottomSheet(
@@ -1417,49 +1497,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ═══════════════════════════════════════════════════════════════════
-  // IMAGE PICKERS
+  // IMAGE PICKER - Camera (New Memory)
   // ═══════════════════════════════════════════════════════════════════
-  Future<void> _pickImageForReplacement(Function(File) onImageSelected) async {
-    try {
-      final XFile? image = await _imagePicker.pickImage(
-        source: ImageSource.camera,
-        imageQuality: 80,
-      );
-      if (image != null) {
-        onImageSelected(File(image.path));
-      }
-    } catch (e) {
-      debugPrint('Error picking image from camera: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error accessing camera: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
-
-  Future<void> _pickImageFromGalleryForReplacement(
-      Function(File) onImageSelected) async {
-    try {
-      final XFile? image = await _imagePicker.pickImage(
-        source: ImageSource.gallery,
-        imageQuality: 80,
-      );
-      if (image != null) {
-        onImageSelected(File(image.path));
-      }
-    } catch (e) {
-      debugPrint('Error picking image from gallery: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error accessing gallery: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
-
   Future<void> _pickImageFromCamera() async {
     try {
       final XFile? image = await _imagePicker.pickImage(
@@ -1480,6 +1519,9 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  // ═══════════════════════════════════════════════════════════════════
+  // IMAGE PICKER - Gallery (New Memory)
+  // ═══════════════════════════════════════════════════════════════════
   Future<void> _pickImageFromGallery() async {
     try {
       final XFile? image = await _imagePicker.pickImage(
@@ -1501,7 +1543,54 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ═══════════════════════════════════════════════════════════════════
-  // CREATE NEW MEMORY
+  // IMAGE PICKER - Camera (For Replacement)
+  // ═══════════════════════════════════════════════════════════════════
+  Future<void> _pickImageForReplacement(Function(File) onImageSelected) async {
+    try {
+      final XFile? image = await _imagePicker.pickImage(
+        source: ImageSource.camera,
+        imageQuality: 80,
+      );
+      if (image != null) {
+        onImageSelected(File(image.path));
+      }
+    } catch (e) {
+      debugPrint('Error picking image from camera: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error accessing camera: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // IMAGE PICKER - Gallery (For Replacement)
+  // ═══════════════════════════════════════════════════════════════════
+  Future<void> _pickImageFromGalleryForReplacement(
+      Function(File) onImageSelected) async {
+    try {
+      final XFile? image = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 80,
+      );
+      if (image != null) {
+        onImageSelected(File(image.path));
+      }
+    } catch (e) {
+      debugPrint('Error picking image from gallery: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error accessing gallery: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // CREATE NEW MEMORY - Form Dialog
   // ═══════════════════════════════════════════════════════════════════
   void _showNewMemoryForm(File imageFile) {
     final titleController = TextEditingController();
@@ -1586,7 +1675,7 @@ class _HomeScreenState extends State<HomeScreen> {
               if (titleController.text.isNotEmpty) {
                 setState(() {
                   memories.add({
-                    'id': memories.length + 1,
+                    'id': DateTime.now().millisecondsSinceEpoch,
                     'image': 'assets/images/photo1.jpg',
                     'title': titleController.text,
                     'description': descriptionController.text.isNotEmpty
@@ -1698,7 +1787,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ═══════════════════════════════════════════════════════════════════
-  // PHOTO ACTION SHEET
+  // PHOTO ACTION SHEET - Camera/Gallery Selection
   // ═══════════════════════════════════════════════════════════════════
   void _showPhotoActionSheet() {
     showModalBottomSheet(
