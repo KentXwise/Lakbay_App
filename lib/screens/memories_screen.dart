@@ -3,7 +3,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-
 import '../core/app_colors.dart';
 import 'profile_screen.dart';
 import 'trip_detail_screen.dart';
@@ -27,13 +26,6 @@ class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
   final ImagePicker _imagePicker = ImagePicker();
 
-  // Mock memory data
-  List<Map<String, dynamic>> memories = [
-    {'id': 1, 'image': 'assets/images/photo1.jpg', 'title': 'Beach Trip', 'description': 'Amazing beach day', 'imageFile': null},
-    {'id': 2, 'image': 'assets/images/photo2.jpg', 'title': 'Mountain View', 'description': 'Peak of adventure', 'imageFile': null},
-    {'id': 3, 'image': 'assets/images/photo3.jpg', 'title': 'City Lights', 'description': 'Night in the city', 'imageFile': null},
-  ];
-
   // Trips data - now using Trip model
   List<Trip> trips = [
     Trip(
@@ -49,6 +41,31 @@ class _HomeScreenState extends State<HomeScreen> {
       expensesList: [],
       tasksList: [],
     ),
+  ];
+
+  // Mock memory data
+  List<Map<String, dynamic>> memories = [
+    {
+      'id': 1,
+      'image': 'assets/images/photo1.jpg',
+      'title': 'Beach Trip',
+      'description': 'Amazing beach day',
+      'imageFile': null
+    },
+    {
+      'id': 2,
+      'image': 'assets/images/photo2.jpg',
+      'title': 'Mountain View',
+      'description': 'Peak of adventure',
+      'imageFile': null
+    },
+    {
+      'id': 3,
+      'image': 'assets/images/photo3.jpg',
+      'title': 'City Lights',
+      'description': 'Night in the city',
+      'imageFile': null
+    },
   ];
 
   @override
@@ -172,7 +189,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   Expanded(
                     child: _buildStatCard(
-                      '₱6k',
+                      _calculateTotalSpent(),
                       'Spent',
                       Icons.wallet_giftcard,
                     ),
@@ -411,314 +428,267 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-// ═══════════════════════════════════════════════════════════════════
-// TRIP CARD WITH LONG-PRESS DELETE
-// ═══════════════════════════════════════════════════════════════════
-Widget _buildTripCard(Trip trip) {
-  return GestureDetector(
-    onTap: () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => TripDetailScreen(trip: trip),
-        ),
-      );
-    },
-    onLongPress: () {
-      _showTripActionSheet(trip);
-    },
-    child: Container(
-      margin: EdgeInsets.only(bottom: 16.h),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(
-          color: Colors.grey.shade200,
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 2),
+  // ═══════════════════════════════════════════════════════════════════
+  // TRIP CARD WITH LONG-PRESS DELETE
+  // ═══════════════════════════════════════════════════════════════════
+  Widget _buildTripCard(Trip trip) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => TripDetailScreen(trip: trip),
           ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // Image
-          ClipRRect(
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(16.r),
-              topRight: Radius.circular(16.r),
-            ),
-            child: Container(
-              height: 160.h,
-              color: Colors.grey.shade200,
-              child: Image.asset(
-                trip.image,
-                fit: BoxFit.cover,
-                width: double.infinity,
-                errorBuilder: (context, error, stackTrace) {
-                  return Center(
-                    child: Icon(
-                      Icons.image_not_supported_outlined,
-                      size: 40.sp,
-                      color: Colors.grey.shade400,
-                    ),
-                  );
-                },
-              ),
-            ),
+        );
+      },
+      onLongPress: () {
+        setState(() {
+          trip.isHovered = true;
+        });
+      },
+      child: Container(
+        margin: EdgeInsets.only(bottom: 16.h),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16.r),
+          border: Border.all(
+            color: Colors.grey.shade200,
+            width: 1,
           ),
-          // Details
-          Padding(
-            padding: EdgeInsets.all(16.w),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  trip.title,
-                  style: GoogleFonts.poppins(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.brownPrimary,
-                  ),
-                ),
-                SizedBox(height: 4.h),
-                Text(
-                  trip.destination,
-                  style: GoogleFonts.poppins(
-                    fontSize: 13.sp,
-                    color: Colors.grey.shade500,
-                  ),
-                ),
-                SizedBox(height: 12.h),
-                // Date and Budget Row
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // Date
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.calendar_today,
-                          size: 14.sp,
-                          color: Colors.grey.shade400,
-                        ),
-                        SizedBox(width: 6.w),
-                        Text(
-                          '${trip.startDate} - ${trip.endDate}',
-                          style: GoogleFonts.poppins(
-                            fontSize: 12.sp,
-                            color: Colors.grey.shade600,
-                          ),
-                        ),
-                      ],
-                    ),
-                    // Budget
-                    Text(
-                      '₱${trip.budget}',
-                      style: GoogleFonts.poppins(
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.brownPrimary,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 12,
+              offset: const Offset(0, 2),
             ),
-          ),
-        ],
-      ),
-    ),
-  );
-}
-
-// ═══════════════════════════════════════════════════════════════════
-// TRIP ACTION SHEET - Long Press Menu (CORRECTED)
-// ═══════════════════════════════════════════════════════════════════
-void _showTripActionSheet(Trip trip) {
-  showModalBottomSheet(
-    context: context,
-    backgroundColor: Colors.transparent,
-    isScrollControlled: true,
-    builder: (context) => Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(20.r),
-          topRight: Radius.circular(20.r),
+          ],
         ),
-      ),
-      child: SafeArea(
         child: Column(
-          mainAxisSize: MainAxisSize.min,
           children: [
-            SizedBox(height: 12.h),
-            Container(
-              width: 40.w,
-              height: 4.h,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade300,
-                borderRadius: BorderRadius.circular(2.r),
+            // Image
+            ClipRRect(
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(16.r),
+                topRight: Radius.circular(16.r),
               ),
-            ),
-            SizedBox(height: 24.h),
-            ListTile(
-              leading: Icon(
-                Icons.edit,
-                color: AppColors.brownPrimary,
-                size: 24.sp,
-              ),
-              title: Text(
-                'Edit Trip',
-                style: GoogleFonts.poppins(
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w600,
+              child: Container(
+                height: 160.h,
+                color: Colors.grey.shade200,
+                child: Image.asset(
+                  trip.image,
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Center(
+                      child: Icon(
+                        Icons.image_not_supported_outlined,
+                        size: 40.sp,
+                        color: Colors.grey.shade400,
+                      ),
+                    );
+                  },
                 ),
               ),
-              onTap: () {
-                Navigator.pop(context);
-                _showEditTripModal(trip);
-              },
             ),
-            ListTile(
-              leading: Icon(
-                Icons.delete,
-                color: Colors.red,
-                size: 24.sp,
+            // Details
+            Padding(
+              padding: EdgeInsets.all(16.w),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              trip.title,
+                              style: GoogleFonts.poppins(
+                                fontSize: 16.sp,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.brownPrimary,
+                              ),
+                            ),
+                            SizedBox(height: 4.h),
+                            Text(
+                              trip.destination,
+                              style: GoogleFonts.poppins(
+                                fontSize: 13.sp,
+                                color: Colors.grey.shade500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      // Delete & Cancel buttons on long-press
+                      if (trip.isHovered)
+                        Row(
+                          children: [
+                            ElevatedButton(
+                              onPressed: () {
+                                _showTripDeleteConfirmation(trip);
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.red,
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 12.w,
+                                  vertical: 8.h,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8.r),
+                                ),
+                              ),
+                              child: Text(
+                                'Delete',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 12.sp,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: 8.w),
+                            OutlinedButton(
+                              onPressed: () {
+                                setState(() {
+                                  trip.isHovered = false;
+                                });
+                              },
+                              style: OutlinedButton.styleFrom(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 12.w,
+                                  vertical: 8.h,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8.r),
+                                ),
+                              ),
+                              child: Text(
+                                'Cancel',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 12.sp,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.brownPrimary,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                    ],
+                  ),
+                  SizedBox(height: 12.h),
+                  // Date and Budget Row
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Date
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.calendar_today,
+                            size: 14.sp,
+                            color: Colors.grey.shade400,
+                          ),
+                          SizedBox(width: 6.w),
+                          Text(
+                            '${trip.startDate} - ${trip.endDate}',
+                            style: GoogleFonts.poppins(
+                              fontSize: 12.sp,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
+                      // Budget
+                      Text(
+                        '₱${trip.budget}',
+                        style: GoogleFonts.poppins(
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.brownPrimary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-              title: Text(
-                'Delete Trip',
-                style: GoogleFonts.poppins(
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.red,
-                ),
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                _showTripDeleteConfirmation(trip);
-              },
             ),
-            SizedBox(height: 12.h),
           ],
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
-// ═══════════════════════════════════════════════════════════════════
-// EDIT TRIP MODAL - Opens EditActivityModal for trip details
-// ═══════════════════════════════════════════════════════════════════
-void _showEditTripModal(Trip trip) {
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16.r),
-      ),
-      contentPadding: EdgeInsets.zero,
-      content: SingleChildScrollView(
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16.r),
+  // ═══════════════════════════════════════════════════════════════════
+  // TRIP DELETE CONFIRMATION DIALOG
+  // ═══════════════════════════════════════════════════════════════════
+  void _showTripDeleteConfirmation(Trip trip) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          'Delete Trip?',
+          style: GoogleFonts.poppins(
+            fontWeight: FontWeight.w600,
+            color: AppColors.brownPrimary,
           ),
-          child: EditActivityModal(
-            activity: null,
-            tripId: trip.id ?? '1', // Use fallback if id is null
-            tripStartDate: trip.startDate,
-            tripEndDate: trip.endDate,
-            onSave: (activity) {
-              // Handle trip update
-              setState(() {
-                // Update trip logic here if needed
-                // For now, just show success message
-              });
+        ),
+        content: Text(
+          'Are you sure you want to delete "${trip.title}"? This action cannot be undone.',
+          style: GoogleFonts.poppins(
+            fontSize: 14.sp,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
               Navigator.pop(context);
+              setState(() {
+                trip.isHovered = false;
+              });
+            },
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.poppins(
+                fontWeight: FontWeight.w600,
+                color: Colors.grey,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              setState(() {
+                trips.removeWhere((t) => t.id == trip.id);
+              });
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(
-                    'Trip updated successfully!',
+                    'Trip deleted',
                     style: GoogleFonts.poppins(),
                   ),
-                  backgroundColor: Colors.green,
+                  backgroundColor: Colors.red,
+                  duration: const Duration(seconds: 2),
                 ),
               );
             },
-          ),
-        ),
-      ),
-    ),
-  );
-}
-
-// ═══════════════════════════════════════════════════════════════════
-// TRIP DELETE CONFIRMATION DIALOG
-// ═══════════════════════════════════════════════════════════════════
-void _showTripDeleteConfirmation(Trip trip) {
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: Text(
-        'Delete Trip?',
-        style: GoogleFonts.poppins(
-          fontWeight: FontWeight.w600,
-          color: AppColors.brownPrimary,
-        ),
-      ),
-      content: Text(
-        'Are you sure you want to delete "${trip.title}"? This action cannot be undone.',
-        style: GoogleFonts.poppins(
-          fontSize: 14.sp,
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(
-            'Cancel',
-            style: GoogleFonts.poppins(
-              fontWeight: FontWeight.w600,
-              color: Colors.grey,
-            ),
-          ),
-        ),
-        TextButton(
-          onPressed: () {
-            Navigator.pop(context);
-            setState(() {
-              trips.removeWhere((t) => t.id == trip.id);
-            });
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  'Trip deleted',
-                  style: GoogleFonts.poppins(),
-                ),
-                backgroundColor: Colors.red,
-                duration: const Duration(seconds: 2),
+            child: Text(
+              'Delete',
+              style: GoogleFonts.poppins(
+                fontWeight: FontWeight.w600,
+                color: Colors.red,
               ),
-            );
-          },
-          child: Text(
-            'Delete',
-            style: GoogleFonts.poppins(
-              fontWeight: FontWeight.w600,
-              color: Colors.red,
             ),
           ),
-        ),
-      ],
-    ),
-  );
-}
+        ],
+      ),
+    );
+  }
 
   // ═══════════════════════════════════════════════════════════════════
-  // CREATE TRIP MODAL - Using CreateTripModal widget
+  // CREATE TRIP MODAL
   // ═══════════════════════════════════════════════════════════════════
   void _showCreateTripModal() {
     showDialog(
@@ -832,7 +802,8 @@ void _showTripDeleteConfirmation(Trip trip) {
   // ═══════════════════════════════════════════════════════════════════
   // MEMORY CARD
   // ═══════════════════════════════════════════════════════════════════
-  Widget _buildMemoryCard(Map<String, dynamic> memory, {required double height}) {
+  Widget _buildMemoryCard(Map<String, dynamic> memory,
+      {required double height}) {
     return GestureDetector(
       onLongPress: () {
         _showMemoryActionSheet(memory);
@@ -972,8 +943,8 @@ void _showTripDeleteConfirmation(Trip trip) {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                TweenAnimationBuilder<double>(
-                  tween: Tween(begin: 0, end: 1),
+                TweenAnimationBuilder(
+                  tween: Tween(begin: 0.0, end: 1.0),
                   duration: const Duration(milliseconds: 500),
                   builder: (context, value, child) {
                     return Transform.scale(
@@ -1221,8 +1192,8 @@ void _showTripDeleteConfirmation(Trip trip) {
 
   void _editMemory(Map<String, dynamic> memory) {
     final titleController = TextEditingController(text: memory['title']);
-    final descriptionController = TextEditingController(text: memory['description']);
-
+    final descriptionController =
+        TextEditingController(text: memory['description']);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -1321,7 +1292,6 @@ void _showTripDeleteConfirmation(Trip trip) {
         source: ImageSource.camera,
         imageQuality: 80,
       );
-
       if (image != null) {
         _showNewMemoryForm(File(image.path));
       }
@@ -1342,7 +1312,6 @@ void _showTripDeleteConfirmation(Trip trip) {
         source: ImageSource.gallery,
         imageQuality: 80,
       );
-
       if (image != null) {
         _showNewMemoryForm(File(image.path));
       }
@@ -1360,7 +1329,6 @@ void _showTripDeleteConfirmation(Trip trip) {
   void _showNewMemoryForm(File imageFile) {
     final titleController = TextEditingController();
     final descriptionController = TextEditingController();
-
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -1595,24 +1563,6 @@ void _showTripDeleteConfirmation(Trip trip) {
               ),
               ListTile(
                 leading: Icon(
-                  Icons.image,
-                  color: AppColors.brownPrimary,
-                  size: 24.sp,
-                ),
-                title: Text(
-                  'Replace Image',
-                  style: GoogleFonts.poppins(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  _replaceImage(memory);
-                },
-              ),
-              ListTile(
-                leading: Icon(
                   Icons.delete,
                   color: Colors.red,
                   size: 24.sp,
@@ -1694,6 +1644,27 @@ void _showTripDeleteConfirmation(Trip trip) {
         ],
       ),
     );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // CALCULATE TOTAL SPENT FROM ALL TRIPS
+  // ═══════════════════════════════════════════════════════════════════
+  String _calculateTotalSpent() {
+    double total = 0;
+    for (var trip in trips) {
+      if (trip.expenses.isNotEmpty) {
+        total += trip.expenses.fold<double>(
+          0,
+          (sum, expense) => sum + expense.cost,
+        );
+      }
+    }
+    
+    // Format as k if >= 1000, otherwise show full amount
+    if (total >= 1000) {
+      return '₱${(total / 1000).toStringAsFixed(1)}k';
+    }
+    return '₱${total.toStringAsFixed(0)}';
   }
 
   void _showPhotoActionSheet() {
