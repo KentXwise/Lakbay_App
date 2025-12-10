@@ -10,6 +10,7 @@ class Trip {
   final String endDate;
   final int budget;
   final String image;
+  
   final List<Member> members;  
   final List<dynamic> activities;
   final List<Expense> expenses;

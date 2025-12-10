@@ -537,7 +537,7 @@ Widget _buildTripCard(Trip trip) {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// TRIP ACTION SHEET - Long Press Menu (DELETE ONLY)
+// TRIP ACTION SHEET - Long Press Menu (CORRECTED)
 // ═══════════════════════════════════════════════════════════════════
 void _showTripActionSheet(Trip trip) {
   showModalBottomSheet(
@@ -566,6 +566,24 @@ void _showTripActionSheet(Trip trip) {
               ),
             ),
             SizedBox(height: 24.h),
+            ListTile(
+              leading: Icon(
+                Icons.edit,
+                color: AppColors.brownPrimary,
+                size: 24.sp,
+              ),
+              title: Text(
+                'Edit Trip',
+                style: GoogleFonts.poppins(
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                _showEditTripModal(trip);
+              },
+            ),
             ListTile(
               leading: Icon(
                 Icons.delete,

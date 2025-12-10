@@ -1,16 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import '../core/app_colors.dart';
 import '../models/trip_model.dart';
 
-class TripReceiptScreen extends StatelessWidget {
+class TripReceiptScreen extends StatefulWidget {
   final Trip trip;
 
   const TripReceiptScreen({
     super.key,
     required this.trip,
   });
+
+  @override
+  State<TripReceiptScreen> createState() => _TripReceiptScreenState();
+}
+
+class _TripReceiptScreenState extends State<TripReceiptScreen> {
+  late Trip trip;
+  bool _showSplitView = false;
+
+  @override
+  void initState() {
+    super.initState();
+    trip = widget.trip;
+  }
 
   // Calculate total spent from expenses
   double _calculateTotalSpent() {
@@ -26,10 +41,41 @@ class TripReceiptScreen extends StatelessWidget {
     return (trip.budget - _calculateTotalSpent()).toDouble();
   }
 
+  // Calculate per-person share
+  double _calculatePerPersonShare() {
+    if (trip.members.isEmpty) return 0;
+    return _calculateTotalSpent() / trip.members.length;
+  }
+
+  // Print functionality
+  void _printReceipt() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Printing receipt...'),
+        backgroundColor: AppColors.brownPrimary,
+      ),
+    );
+    // TODO: Implement actual print functionality
+    // You can use: https://pub.dev/packages/printing
+  }
+
+  // Download PDF functionality
+  void _downloadPDF() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Downloading receipt as PDF...'),
+        backgroundColor: AppColors.brownPrimary,
+      ),
+    );
+    // TODO: Implement actual PDF generation
+    // You can use: https://pub.dev/packages/pdf and https://pub.dev/packages/printing
+  }
+
   @override
   Widget build(BuildContext context) {
     double totalSpent = _calculateTotalSpent();
     double remaining = _calculateRemaining();
+    double perPersonShare = _calculatePerPersonShare();
 
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
@@ -53,7 +99,6 @@ class TripReceiptScreen extends StatelessWidget {
           IconButton(
             icon: Icon(Icons.share, color: AppColors.brownPrimary),
             onPressed: () {
-              // TODO: Implement share functionality
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text('Share feature coming soon!')),
               );
@@ -81,7 +126,7 @@ class TripReceiptScreen extends StatelessWidget {
                 ),
                 child: Column(
                   children: [
-                    // Header
+                    // Header - Brown Background with Logo
                     Container(
                       width: double.infinity,
                       decoration: BoxDecoration(
@@ -91,30 +136,33 @@ class TripReceiptScreen extends StatelessWidget {
                           topRight: Radius.circular(16.r),
                         ),
                       ),
-                      padding: EdgeInsets.symmetric(vertical: 24.h),
+                      padding: EdgeInsets.symmetric(vertical: 32.h),
                       child: Column(
                         children: [
-                          Icon(
-                            Icons.home,
-                            color: const Color(0xFFD4A574),
-                            size: 40.sp,
+                          // Lakbay Logo from assets
+                          Image.asset(
+                            'assets/images/Lakbay_Logo.png',
+                            height: 60.h,
+                            width: 60.w,
+                            fit: BoxFit.contain,
                           ),
-                          SizedBox(height: 12.h),
+                          SizedBox(height: 16.h),
                           Text(
                             'LAKBAY',
                             style: GoogleFonts.poppins(
-                              fontSize: 24.sp,
+                              fontSize: 32.sp,
                               fontWeight: FontWeight.w600,
                               color: Colors.white,
                               letterSpacing: 2,
                             ),
                           ),
-                          SizedBox(height: 4.h),
+                          SizedBox(height: 8.h),
                           Text(
                             'Travel Receipt',
                             style: GoogleFonts.poppins(
                               fontSize: 14.sp,
                               color: Colors.white70,
+                              fontWeight: FontWeight.w400,
                             ),
                           ),
                         ],
@@ -141,7 +189,7 @@ class TripReceiptScreen extends StatelessWidget {
                           SizedBox(height: 12.h),
                           _buildInfoRow('Budget:', '₱${trip.budget.toStringAsFixed(0)}'),
                           SizedBox(height: 24.h),
-                          Divider(color: Colors.grey.shade300),
+                          Divider(color: Colors.grey.shade300, thickness: 1),
                           SizedBox(height: 24.h),
 
                           // Travel Group
@@ -154,11 +202,11 @@ class TripReceiptScreen extends StatelessWidget {
                               children: trip.members
                                   .map((member) => Container(
                                         padding: EdgeInsets.symmetric(
-                                          horizontal: 12.w,
+                                          horizontal: 16.w,
                                           vertical: 8.h,
                                         ),
                                         decoration: BoxDecoration(
-                                          color: Colors.grey.shade100,
+                                          color: Colors.grey.shade200,
                                           borderRadius:
                                               BorderRadius.circular(20.r),
                                         ),
@@ -167,13 +215,14 @@ class TripReceiptScreen extends StatelessWidget {
                                           style: GoogleFonts.poppins(
                                             fontSize: 12.sp,
                                             color: Colors.grey.shade700,
+                                            fontWeight: FontWeight.w500,
                                           ),
                                         ),
                                       ))
                                   .toList(),
                             ),
                             SizedBox(height: 24.h),
-                            Divider(color: Colors.grey.shade300),
+                            Divider(color: Colors.grey.shade300, thickness: 1),
                             SizedBox(height: 24.h),
                           ],
 
@@ -185,7 +234,7 @@ class TripReceiptScreen extends StatelessWidget {
                             SizedBox(height: 16.h),
                             ..._buildActivitiesList(),
                             SizedBox(height: 24.h),
-                            Divider(color: Colors.grey.shade300),
+                            Divider(color: Colors.grey.shade300, thickness: 1),
                             SizedBox(height: 24.h),
                           ],
 
@@ -195,15 +244,116 @@ class TripReceiptScreen extends StatelessWidget {
                             SizedBox(height: 16.h),
                             ..._buildExpensesList(),
                             SizedBox(height: 24.h),
-                            Divider(color: Colors.grey.shade300),
+                            Divider(color: Colors.grey.shade300, thickness: 1),
                             SizedBox(height: 24.h),
                           ],
 
-                          // Summary
+                          // Per-Person Split Section (with toggle)
+                          if (trip.expenses.isNotEmpty && trip.members.isNotEmpty) ...[
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                _buildSectionTitle('Per-Person Split'),
+                                Container(
+                                  decoration: BoxDecoration(
+                                    color: _showSplitView
+                                        ? AppColors.brownPrimary
+                                        : Colors.grey.shade200,
+                                    borderRadius: BorderRadius.circular(20.r),
+                                  ),
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      setState(() {
+                                        _showSplitView = !_showSplitView;
+                                      });
+                                    },
+                                    child: Padding(
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 12.w,
+                                        vertical: 6.h,
+                                      ),
+                                      child: Text(
+                                        _showSplitView ? 'Hide' : 'Show',
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 12.sp,
+                                          fontWeight: FontWeight.w600,
+                                          color: _showSplitView
+                                              ? Colors.white
+                                              : Colors.grey.shade700,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 16.h),
+                            if (_showSplitView) ...[
+                              Container(
+                                padding: EdgeInsets.all(16.w),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF5E6D3).withOpacity(0.5),
+                                  borderRadius: BorderRadius.circular(12.r),
+                                  border: Border.all(
+                                    color: const Color(0xFFD4A574),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Fair Split Among ${trip.members.length} Members',
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 14.sp,
+                                        fontWeight: FontWeight.w600,
+                                        color: AppColors.brownPrimary,
+                                      ),
+                                    ),
+                                    SizedBox(height: 16.h),
+                                    ..._buildPerPersonShareList(perPersonShare),
+                                    SizedBox(height: 16.h),
+                                    Divider(
+                                      color: AppColors.brownPrimary
+                                          .withOpacity(0.2),
+                                    ),
+                                    SizedBox(height: 16.h),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          'Each person pays',
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 14.sp,
+                                            color: AppColors.brownPrimary,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                        Text(
+                                          '₱${perPersonShare.toStringAsFixed(2)}',
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 18.sp,
+                                            fontWeight: FontWeight.w700,
+                                            color: const Color(0xFFD4A574),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              SizedBox(height: 24.h),
+                              Divider(color: Colors.grey.shade300, thickness: 1),
+                              SizedBox(height: 24.h),
+                            ],
+                          ],
+
+                          // Summary - Brown Background Section
                           Container(
-                            padding: EdgeInsets.all(16.w),
+                            padding: EdgeInsets.all(20.w),
                             decoration: BoxDecoration(
-                              color: Colors.grey.shade50,
+                              color: AppColors.brownPrimary,
                               borderRadius: BorderRadius.circular(12.r),
                             ),
                             child: Row(
@@ -216,16 +366,17 @@ class TripReceiptScreen extends StatelessWidget {
                                       'Total Spent',
                                       style: GoogleFonts.poppins(
                                         fontSize: 12.sp,
-                                        color: Colors.grey.shade600,
+                                        color: Colors.white70,
+                                        fontWeight: FontWeight.w500,
                                       ),
                                     ),
-                                    SizedBox(height: 4.h),
+                                    SizedBox(height: 8.h),
                                     Text(
                                       '₱${totalSpent.toStringAsFixed(0)}',
                                       style: GoogleFonts.poppins(
-                                        fontSize: 20.sp,
+                                        fontSize: 28.sp,
                                         fontWeight: FontWeight.w700,
-                                        color: AppColors.brownPrimary,
+                                        color: Colors.white,
                                       ),
                                     ),
                                   ],
@@ -237,14 +388,15 @@ class TripReceiptScreen extends StatelessWidget {
                                       'Remaining',
                                       style: GoogleFonts.poppins(
                                         fontSize: 12.sp,
-                                        color: Colors.grey.shade600,
+                                        color: Colors.white70,
+                                        fontWeight: FontWeight.w500,
                                       ),
                                     ),
-                                    SizedBox(height: 4.h),
+                                    SizedBox(height: 8.h),
                                     Text(
                                       '₱${remaining.toStringAsFixed(0)}',
                                       style: GoogleFonts.poppins(
-                                        fontSize: 20.sp,
+                                        fontSize: 28.sp,
                                         fontWeight: FontWeight.w700,
                                         color: const Color(0xFFD4A574),
                                       ),
@@ -267,14 +419,16 @@ class TripReceiptScreen extends StatelessWidget {
                                     fontSize: 12.sp,
                                     fontStyle: FontStyle.italic,
                                     color: Colors.grey.shade600,
+                                    fontWeight: FontWeight.w400,
                                   ),
                                 ),
-                                SizedBox(height: 4.h),
+                                SizedBox(height: 8.h),
                                 Text(
-                                  'Generated by Lakbay • ${DateTime.now().toString().split(' ')[0]}',
+                                  'Generated by Lakbay • ${DateFormat('MM/dd/yyyy').format(DateTime.now())}',
                                   style: GoogleFonts.poppins(
                                     fontSize: 11.sp,
-                                    color: Colors.grey.shade400,
+                                    color: Colors.grey.shade500,
+                                    fontWeight: FontWeight.w400,
                                   ),
                                 ),
                               ],
@@ -287,6 +441,97 @@ class TripReceiptScreen extends StatelessWidget {
                 ),
               ),
               SizedBox(height: 24.h),
+
+              // Action Buttons - Print & Download
+              Row(
+                children: [
+                  // Print Button
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: _printReceipt,
+                      child: Container(
+                        padding: EdgeInsets.symmetric(vertical: 14.h),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12.r),
+                          border: Border.all(
+                            color: AppColors.brownPrimary,
+                            width: 2,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.print,
+                              color: AppColors.brownPrimary,
+                              size: 20.sp,
+                            ),
+                            SizedBox(width: 8.w),
+                            Text(
+                              'Print',
+                              style: GoogleFonts.poppins(
+                                fontSize: 14.sp,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.brownPrimary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 16.w),
+
+                  // Download PDF Button
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: _downloadPDF,
+                      child: Container(
+                        padding: EdgeInsets.symmetric(vertical: 14.h),
+                        decoration: BoxDecoration(
+                          color: AppColors.brownPrimary,
+                          borderRadius: BorderRadius.circular(12.r),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.brownPrimary.withOpacity(0.3),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.download,
+                              color: Colors.white,
+                              size: 20.sp,
+                            ),
+                            SizedBox(width: 8.w),
+                            Text(
+                              'Download PDF',
+                              style: GoogleFonts.poppins(
+                                fontSize: 14.sp,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 32.h),
             ],
           ),
         ),
@@ -312,15 +557,16 @@ class TripReceiptScreen extends StatelessWidget {
         Text(
           label,
           style: GoogleFonts.poppins(
-            fontSize: 12.sp,
-            color: Colors.grey.shade600,
+            fontSize: 13.sp,
+            color: Colors.grey.shade700,
+            fontWeight: FontWeight.w500,
           ),
         ),
         Text(
           value,
           style: GoogleFonts.poppins(
-            fontSize: 12.sp,
-            fontWeight: FontWeight.w500,
+            fontSize: 13.sp,
+            fontWeight: FontWeight.w600,
             color: AppColors.brownPrimary,
           ),
         ),
@@ -343,35 +589,45 @@ class TripReceiptScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
-                    child: Text(
-                      activity.name ?? 'Activity',
-                      style: GoogleFonts.poppins(
-                        fontSize: 13.sp,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.grey.shade800,
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          activity.name ?? 'Activity',
+                          style: GoogleFonts.poppins(
+                            fontSize: 13.sp,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey.shade800,
+                          ),
+                        ),
+                        SizedBox(height: 4.h),
+                        Text(
+                          '${activity.day ?? 'Day 1'} • ${activity.time ?? '09:00 AM'}',
+                          style: GoogleFonts.poppins(
+                            fontSize: 11.sp,
+                            color: Colors.grey.shade500,
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  SizedBox(width: 8.w),
+                  SizedBox(width: 12.w),
                   Text(
                     '₱${activity.cost ?? 0}',
                     style: GoogleFonts.poppins(
                       fontSize: 13.sp,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w700,
                       color: const Color(0xFFD4A574),
                     ),
                   ),
                 ],
               ),
-              SizedBox(height: 4.h),
-              Text(
-                '${activity.day ?? 'Day 1'} • ${activity.time ?? '09:00 AM'}',
-                style: GoogleFonts.poppins(
-                  fontSize: 11.sp,
-                  color: Colors.grey.shade500,
-                ),
-              ),
-              if (!isLast) SizedBox(height: 12.h),
+              if (!isLast) ...[
+                SizedBox(height: 12.h),
+                Divider(color: Colors.grey.shade200, height: 1),
+                SizedBox(height: 12.h),
+              ],
             ],
           );
         })
@@ -399,16 +655,17 @@ class TripReceiptScreen extends StatelessWidget {
                         expense.description,
                         style: GoogleFonts.poppins(
                           fontSize: 13.sp,
-                          fontWeight: FontWeight.w500,
+                          fontWeight: FontWeight.w600,
                           color: Colors.grey.shade800,
                         ),
                       ),
-                      SizedBox(height: 2.h),
+                      SizedBox(height: 4.h),
                       Text(
                         expense.category,
                         style: GoogleFonts.poppins(
                           fontSize: 11.sp,
                           color: Colors.grey.shade500,
+                          fontWeight: FontWeight.w400,
                         ),
                       ),
                     ],
@@ -417,14 +674,76 @@ class TripReceiptScreen extends StatelessWidget {
                     '₱${expense.cost.toStringAsFixed(0)}',
                     style: GoogleFonts.poppins(
                       fontSize: 13.sp,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w700,
                       color: const Color(0xFFD4A574),
                     ),
                   ),
                 ],
               ),
-              if (!isLast) SizedBox(height: 12.h),
+              if (!isLast) ...[
+                SizedBox(height: 12.h),
+                Divider(color: Colors.grey.shade200, height: 1),
+                SizedBox(height: 12.h),
+              ],
             ],
+          );
+        })
+        .toList();
+  }
+
+  List<Widget> _buildPerPersonShareList(double perPersonShare) {
+    return trip.members
+        .asMap()
+        .entries
+        .map((entry) {
+          final member = entry.value;
+          final index = entry.key;
+          return Padding(
+            padding: EdgeInsets.only(bottom: 12.h),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 32.w,
+                      height: 32.h,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: AppColors.brownPrimary,
+                      ),
+                      child: Center(
+                        child: Text(
+                          '${index + 1}',
+                          style: GoogleFonts.poppins(
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 12.w),
+                    Text(
+                      member.toString(),
+                      style: GoogleFonts.poppins(
+                        fontSize: 13.sp,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.brownPrimary,
+                      ),
+                    ),
+                  ],
+                ),
+                Text(
+                  '₱${perPersonShare.toStringAsFixed(2)}',
+                  style: GoogleFonts.poppins(
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.brownPrimary,
+                  ),
+                ),
+              ],
+            ),
           );
         })
         .toList();
