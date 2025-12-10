@@ -17,6 +17,8 @@ class Trip {
   final List<TaskItem> tasks;
   final String? departureTime;
   final String? arrivalTime;
+  
+    bool isHovered = false;
 
   Trip({
     this.id,
