@@ -18,6 +18,7 @@ const HomeScreen({
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
+
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
   late String displayName;
@@ -107,18 +108,18 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: _selectedIndex == 0
+      body: _selectedIndex == 1
           ? SafeArea(
               child: Column(
                 children: [
+                  
                   Container(
-                    color: AppColors.brownPrimary,
-                    padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 35.h),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // ✅ CHANGED: Display nickname from parameter
-                        Row(
+                  width: double.infinity,
+                  padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 35.h),
+                  decoration: BoxDecoration(
+                  color: AppColors.brownPrimary,
+                      borderRadius: BorderRadius.circular(24.r),
+                  ),
                           children: [
                             Text(
                               'Kamusta, ',
@@ -128,7 +129,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ),
                             Text(
-                              '${widget.userNickname}!', // ✅ Use the passed nickname
+                              '${widget.userNickname}!', 
                               style: GoogleFonts.poppins(
                                 fontSize: 16.sp,
                                 fontWeight: FontWeight.w600,
@@ -205,7 +206,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
             )
-: _selectedIndex == 1
+: _selectedIndex == 0
               ? const Center(
                   child: Text(
                     'Coming Soon',
@@ -214,7 +215,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 )
               : const ProfileScreen(),
       
-      floatingActionButton: _selectedIndex == 0
+      floatingActionButton: _selectedIndex == 1
     ? FloatingActionButton(
         backgroundColor: AppColors.brownPrimary,
         onPressed: _showCreateTripModal,
