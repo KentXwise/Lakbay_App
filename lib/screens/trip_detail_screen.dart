@@ -11,6 +11,7 @@ import '../screens/members_screen.dart';
 import '../models/member_model.dart';
 import '../screens/tasks_screen.dart';
 import '../models/task_model.dart';
+import '../screens/trip_receipt_screen.dart';
 
 class TripDetailScreen extends StatefulWidget {
   final Trip trip;
@@ -25,6 +26,15 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
   late String selectedTab;
   late List<Activity> activities;
   late Trip currentTrip;
+
+void _showTripReceipt() {
+    Navigator.push(
+    context,
+    MaterialPageRoute(
+    builder: (context) => TripReceiptScreen(trip: currentTrip),
+    ),
+    );
+    }
 
   @override
   void initState() {
@@ -114,18 +124,20 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                     ),
                   ),
                 ),
-                Positioned(
-                  top: 16.h,
-                  right: 60.w,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.black.withOpacity(0.3),
-                    ),
-                    padding: EdgeInsets.all(8.w),
-                    child: Icon(Icons.download,
-                        color: Colors.white, size: 20.sp),
-                  ),
+               Positioned(
+                top: 16.h,
+                right: 60.w,
+                child: GestureDetector(
+                onTap: () => _showTripReceipt(),
+                child: Container(
+                decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.black.withOpacity(0.3),
+                ),
+                padding: EdgeInsets.all(8.w),
+                child: Icon(Icons.download, color: Colors.white, size: 20.sp),
+                ),
+                ),
                 ),
               ],
             ),
