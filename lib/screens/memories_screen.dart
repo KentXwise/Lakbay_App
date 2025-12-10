@@ -189,7 +189,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   Expanded(
                     child: _buildStatCard(
-                      '₱6k',
+                      _calculateTotalSpent(),
                       'Spent',
                       Icons.wallet_giftcard,
                     ),
@@ -1644,6 +1644,27 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
     );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // CALCULATE TOTAL SPENT FROM ALL TRIPS
+  // ═══════════════════════════════════════════════════════════════════
+  String _calculateTotalSpent() {
+    double total = 0;
+    for (var trip in trips) {
+      if (trip.expenses.isNotEmpty) {
+        total += trip.expenses.fold<double>(
+          0,
+          (sum, expense) => sum + expense.cost,
+        );
+      }
+    }
+    
+    // Format as k if >= 1000, otherwise show full amount
+    if (total >= 1000) {
+      return '₱${(total / 1000).toStringAsFixed(1)}k';
+    }
+    return '₱${total.toStringAsFixed(0)}';
   }
 
   void _showPhotoActionSheet() {
