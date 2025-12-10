@@ -8,7 +8,6 @@ import 'profile_screen.dart';
 import 'trip_detail_screen.dart';
 import '../models/trip_model.dart';
 import '../widgets/create_trip_modal.dart';
-import '../widgets/edit_activity_modal.dart';
 
 class HomeScreen extends StatefulWidget {
   final String userNickname;
@@ -26,7 +25,7 @@ class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
   final ImagePicker _imagePicker = ImagePicker();
 
-  // Trips data - now using Trip model
+  // Trips data
   List<Trip> trips = [
     Trip(
       id: '1',
@@ -143,7 +142,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ═══════════════════════════════════════════════════════════════════
-  // MEMORIES TAB
+  // HOME TAB - Memories Display
   // ═══════════════════════════════════════════════════════════════════
   Widget _buildHomeTab() {
     return Column(
@@ -254,7 +253,6 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildTripsTab() {
     return Column(
       children: [
-        // Header
         Container(
           width: double.infinity,
           decoration: BoxDecoration(
@@ -300,7 +298,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               SizedBox(height: 24.h),
-              // Search Bar
               Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -336,7 +333,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
         ),
-        // Trips List
         Expanded(
           child: trips.isEmpty
               ? _buildEmptyTripsState()
@@ -399,9 +395,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               SizedBox(height: 32.h),
               ElevatedButton.icon(
-                onPressed: () {
-                  _showCreateTripModal();
-                },
+                onPressed: _showCreateTripModal,
                 icon: const Icon(Icons.add),
                 label: Text(
                   'Create Trip',
@@ -429,7 +423,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ═══════════════════════════════════════════════════════════════════
-  // TRIP CARD WITH LONG-PRESS DELETE
+  // TRIP CARD
   // ═══════════════════════════════════════════════════════════════════
   Widget _buildTripCard(Trip trip) {
     return GestureDetector(
@@ -465,7 +459,6 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         child: Column(
           children: [
-            // Image
             ClipRRect(
               borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(16.r),
@@ -490,7 +483,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-            // Details
             Padding(
               padding: EdgeInsets.all(16.w),
               child: Column(
@@ -522,7 +514,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           ],
                         ),
                       ),
-                      // Delete & Cancel buttons on long-press
                       if (trip.isHovered)
                         Row(
                           children: [
@@ -579,11 +570,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
                   SizedBox(height: 12.h),
-                  // Date and Budget Row
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // Date
                       Row(
                         children: [
                           Icon(
@@ -601,7 +590,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ],
                       ),
-                      // Budget
                       Text(
                         '₱${trip.budget}',
                         style: GoogleFonts.poppins(
@@ -622,7 +610,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ═══════════════════════════════════════════════════════════════════
-  // TRIP DELETE CONFIRMATION DIALOG
+  // TRIP DELETE CONFIRMATION
   // ═══════════════════════════════════════════════════════════════════
   void _showTripDeleteConfirmation(Trip trip) {
     showDialog(
@@ -713,61 +701,58 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ═══════════════════════════════════════════════════════════════════
-  // FORM FIELD WIDGET
+  // STAT CARD
   // ═══════════════════════════════════════════════════════════════════
-  Widget _buildFormField({
-    required TextEditingController controller,
-    required String label,
-    required String hint,
-    TextInputType keyboardType = TextInputType.text,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: GoogleFonts.poppins(
-            fontSize: 13.sp,
-            fontWeight: FontWeight.w600,
-            color: AppColors.brownPrimary,
+  Widget _buildStatCard(String value, String label, IconData icon) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16.r),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 2),
           ),
-        ),
-        SizedBox(height: 8.h),
-        TextField(
-          controller: controller,
-          keyboardType: keyboardType,
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: GoogleFonts.poppins(
-              fontSize: 13.sp,
-              color: Colors.grey.shade400,
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8.r),
-              borderSide: BorderSide(
-                color: Colors.grey.shade300,
-                width: 1,
-              ),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8.r),
-              borderSide: BorderSide(
-                color: AppColors.brownPrimary,
-                width: 2,
-              ),
-            ),
-            contentPadding: EdgeInsets.symmetric(
-              horizontal: 12.w,
-              vertical: 12.h,
+        ],
+      ),
+      padding: EdgeInsets.symmetric(
+        horizontal: 12.w,
+        vertical: 16.h,
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            icon,
+            color: const Color(0xFFD4A574),
+            size: 28.sp,
+          ),
+          SizedBox(height: 10.h),
+          Text(
+            value,
+            style: GoogleFonts.poppins(
+              fontSize: 16.sp,
+              fontWeight: FontWeight.w700,
+              color: AppColors.brownPrimary,
             ),
           ),
-        ),
-      ],
+          SizedBox(height: 4.h),
+          Text(
+            label,
+            style: GoogleFonts.poppins(
+              fontSize: 11.sp,
+              fontWeight: FontWeight.w500,
+              color: Colors.grey.shade500,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   // ═══════════════════════════════════════════════════════════════════
-  // MASONRY GALLERY (Memories)
+  // MASONRY GALLERY
   // ═══════════════════════════════════════════════════════════════════
   Widget _buildMasonryGallery() {
     return Row(
@@ -800,7 +785,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ═══════════════════════════════════════════════════════════════════
-  // MEMORY CARD
+  // MEMORY CARD - Enhanced with Tap & Long-Press
   // ═══════════════════════════════════════════════════════════════════
   Widget _buildMemoryCard(Map<String, dynamic> memory,
       {required double height}) {
@@ -872,30 +857,32 @@ class _HomeScreenState extends State<HomeScreen> {
                       end: Alignment.bottomCenter,
                       colors: [
                         Colors.transparent,
-                        Colors.black.withOpacity(0.3),
+                        Colors.black.withOpacity(0.4),
                       ],
                     ),
                   ),
                   padding: EdgeInsets.all(12.w),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: Text(
-                          memory['title'] ?? 'Memory',
-                          style: GoogleFonts.poppins(
-                            fontSize: 12.sp,
-                            color: Colors.white,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                      Text(
+                        memory['title'] ?? 'Memory',
+                        style: GoogleFonts.poppins(
+                          fontSize: 12.sp,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w500,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      Icon(
-                        Icons.touch_app,
-                        color: Colors.white70,
-                        size: 14.sp,
+                      SizedBox(height: 4.h),
+                      Text(
+                        'Tap to view • Long press to edit',
+                        style: GoogleFonts.poppins(
+                          fontSize: 10.sp,
+                          color: Colors.white70,
+                          fontWeight: FontWeight.w400,
+                        ),
                       ),
                     ],
                   ),
@@ -913,9 +900,7 @@ class _HomeScreenState extends State<HomeScreen> {
   // ═══════════════════════════════════════════════════════════════════
   Widget _buildAddPhotoCard() {
     return GestureDetector(
-      onTap: () {
-        _showPhotoActionSheet();
-      },
+      onTap: _showPhotoActionSheet,
       child: Container(
         height: 180.h,
         decoration: BoxDecoration(
@@ -936,9 +921,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: () {
-              _showPhotoActionSheet();
-            },
+            onTap: _showPhotoActionSheet,
             borderRadius: BorderRadius.circular(16.r),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -1000,71 +983,23 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ═══════════════════════════════════════════════════════════════════
-  // STAT CARD
-  // ═══════════════════════════════════════════════════════════════════
-  Widget _buildStatCard(String value, String label, IconData icon) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 12,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      padding: EdgeInsets.symmetric(
-        horizontal: 12.w,
-        vertical: 16.h,
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            icon,
-            color: const Color(0xFFD4A574),
-            size: 28.sp,
-          ),
-          SizedBox(height: 10.h),
-          Text(
-            value,
-            style: GoogleFonts.poppins(
-              fontSize: 16.sp,
-              fontWeight: FontWeight.w700,
-              color: AppColors.brownPrimary,
-            ),
-          ),
-          SizedBox(height: 4.h),
-          Text(
-            label,
-            style: GoogleFonts.poppins(
-              fontSize: 11.sp,
-              fontWeight: FontWeight.w500,
-              color: Colors.grey.shade500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ═══════════════════════════════════════════════════════════════════
-  // Memory Functions (View, Edit, Delete, etc.)
+  // VIEW MEMORY - Read-Only Modal
   // ═══════════════════════════════════════════════════════════════════
   void _viewMemory(Map<String, dynamic> memory) {
     showDialog(
       context: context,
-      builder: (context) => Dialog(
-        backgroundColor: Colors.transparent,
-        insetPadding: EdgeInsets.all(16.w),
-        child: Stack(
-          children: [
-            Container(
+      barrierDismissible: true,
+      builder: (context) => GestureDetector(
+        onTap: () => Navigator.pop(context),
+        child: Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: EdgeInsets.all(16.w),
+          child: GestureDetector(
+            onTap: () {},
+            child: Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(16.r),
-                color: Colors.black,
+                color: Colors.white,
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -1088,15 +1023,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             width: double.infinity,
                           ),
                   ),
-                  Container(
+                  Padding(
                     padding: EdgeInsets.all(20.w),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.only(
-                        bottomLeft: Radius.circular(16.r),
-                        bottomRight: Radius.circular(16.r),
-                      ),
-                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -1108,50 +1036,23 @@ class _HomeScreenState extends State<HomeScreen> {
                             color: AppColors.brownPrimary,
                           ),
                         ),
-                        SizedBox(height: 8.h),
+                        SizedBox(height: 12.h),
                         Text(
                           memory['description'] ?? 'No description',
                           style: GoogleFonts.poppins(
                             fontSize: 14.sp,
                             color: Colors.grey.shade600,
+                            height: 1.5,
                           ),
                         ),
-                        SizedBox(height: 20.h),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: ElevatedButton.icon(
-                                onPressed: () {
-                                  Navigator.pop(context);
-                                  _editMemory(memory);
-                                },
-                                icon: const Icon(Icons.edit),
-                                label: Text(
-                                  'Edit',
-                                  style: GoogleFonts.poppins(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.brownPrimary,
-                                  foregroundColor: Colors.white,
-                                ),
-                              ),
-                            ),
-                            SizedBox(width: 12.w),
-                            Expanded(
-                              child: TextButton(
-                                onPressed: () => Navigator.pop(context),
-                                child: Text(
-                                  'Close',
-                                  style: GoogleFonts.poppins(
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.brownPrimary,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
+                        SizedBox(height: 8.h),
+                        Text(
+                          '(Tap outside to close)',
+                          style: GoogleFonts.poppins(
+                            fontSize: 11.sp,
+                            color: Colors.grey.shade400,
+                            fontStyle: FontStyle.italic,
+                          ),
                         ),
                       ],
                     ),
@@ -1159,28 +1060,277 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
             ),
-            Positioned(
-              top: 10,
-              right: 10,
-              child: GestureDetector(
-                onTap: () => Navigator.pop(context),
-                child: Container(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
-                        blurRadius: 8,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // MEMORY ACTION SHEET - Long Press
+  // ═══════════════════════════════════════════════════════════════════
+  void _showMemoryActionSheet(Map<String, dynamic> memory) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(20.r),
+            topRight: Radius.circular(20.r),
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(height: 12.h),
+              Container(
+                width: 40.w,
+                height: 4.h,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2.r),
+                ),
+              ),
+              SizedBox(height: 24.h),
+              ListTile(
+                leading: Icon(
+                  Icons.edit,
+                  color: AppColors.brownPrimary,
+                  size: 24.sp,
+                ),
+                title: Text(
+                  'Edit Memory',
+                  style: GoogleFonts.poppins(
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _editMemory(memory);
+                },
+              ),
+              ListTile(
+                leading: Icon(
+                  Icons.delete,
+                  color: Colors.red,
+                  size: 24.sp,
+                ),
+                title: Text(
+                  'Delete Memory',
+                  style: GoogleFonts.poppins(
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.red,
+                  ),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showDeleteConfirmation(memory);
+                },
+              ),
+              SizedBox(height: 12.h),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // EDIT MEMORY - with Image Replacement
+  // ═══════════════════════════════════════════════════════════════════
+  void _editMemory(Map<String, dynamic> memory) {
+    final titleController = TextEditingController(text: memory['title']);
+    final descriptionController =
+        TextEditingController(text: memory['description']);
+    File? newImageFile = memory['imageFile'];
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: Text(
+            'Edit Memory',
+            style: GoogleFonts.poppins(
+              fontWeight: FontWeight.w600,
+              color: AppColors.brownPrimary,
+            ),
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                GestureDetector(
+                  onTap: () {
+                    _showImageReplaceOptions(
+                      memory,
+                      (File newImage) {
+                        setState(() {
+                          newImageFile = newImage;
+                        });
+                      },
+                    );
+                  },
+                  child: Stack(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(12.r),
+                        child: Container(
+                          height: 150.h,
+                          width: double.infinity,
+                          color: Colors.grey.shade200,
+                          child: newImageFile != null
+                              ? Image.file(
+                                  newImageFile!,
+                                  fit: BoxFit.cover,
+                                )
+                              : (memory['imageFile'] != null
+                                  ? Image.file(
+                                      memory['imageFile'],
+                                      fit: BoxFit.cover,
+                                    )
+                                  : Image.asset(
+                                      memory['image'],
+                                      fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (context, error, stackTrace) {
+                                        return Center(
+                                          child: Icon(
+                                            Icons.image_not_supported_outlined,
+                                            size: 40.sp,
+                                            color: Colors.grey.shade400,
+                                          ),
+                                        );
+                                      },
+                                    )),
+                        ),
+                      ),
+                      Positioned(
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.transparent,
+                                Colors.black.withOpacity(0.6),
+                              ],
+                            ),
+                          ),
+                          padding: EdgeInsets.all(12.w),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.camera_alt,
+                                color: Colors.white,
+                                size: 16.sp,
+                              ),
+                              SizedBox(width: 8.w),
+                              Text(
+                                'Tap to replace image',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 12.sp,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ],
                   ),
-                  padding: EdgeInsets.all(8.w),
-                  child: Icon(
-                    Icons.close,
-                    color: AppColors.brownPrimary,
-                    size: 20.sp,
+                ),
+                SizedBox(height: 16.h),
+                TextField(
+                  controller: titleController,
+                  decoration: InputDecoration(
+                    labelText: 'Title',
+                    hintText: 'Memory title',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12.r),
+                      borderSide: BorderSide(
+                        color: AppColors.brownPrimary,
+                        width: 2,
+                      ),
+                    ),
                   ),
+                ),
+                SizedBox(height: 16.h),
+                TextField(
+                  controller: descriptionController,
+                  decoration: InputDecoration(
+                    labelText: 'Description',
+                    hintText: 'Add details about this memory...',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12.r),
+                      borderSide: BorderSide(
+                        color: AppColors.brownPrimary,
+                        width: 2,
+                      ),
+                    ),
+                  ),
+                  maxLines: 3,
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                'Cancel',
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  memory['title'] = titleController.text;
+                  memory['description'] = descriptionController.text;
+                  if (newImageFile != null) {
+                    memory['imageFile'] = newImageFile;
+                  }
+                });
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'Memory updated!',
+                      style: GoogleFonts.poppins(
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    backgroundColor: Colors.green,
+                    duration: const Duration(seconds: 2),
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.brownPrimary,
+              ),
+              child: Text(
+                'Save',
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
                 ),
               ),
             ),
@@ -1190,100 +1340,124 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _editMemory(Map<String, dynamic> memory) {
-    final titleController = TextEditingController(text: memory['title']);
-    final descriptionController =
-        TextEditingController(text: memory['description']);
-    showDialog(
+  // ═══════════════════════════════════════════════════════════════════
+  // IMAGE REPLACE OPTIONS
+  // ═══════════════════════════════════════════════════════════════════
+  void _showImageReplaceOptions(
+    Map<String, dynamic> memory,
+    Function(File) onImageSelected,
+  ) {
+    showModalBottomSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          'Edit Memory',
-          style: GoogleFonts.poppins(
-            fontWeight: FontWeight.w600,
-            color: AppColors.brownPrimary,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(20.r),
+            topRight: Radius.circular(20.r),
           ),
         ),
-        content: SingleChildScrollView(
+        child: SafeArea(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextField(
-                controller: titleController,
-                decoration: InputDecoration(
-                  labelText: 'Title',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.r),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.r),
-                    borderSide: BorderSide(
-                      color: AppColors.brownPrimary,
-                      width: 2,
-                    ),
-                  ),
+              SizedBox(height: 12.h),
+              Container(
+                width: 40.w,
+                height: 4.h,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2.r),
                 ),
               ),
-              SizedBox(height: 16.h),
-              TextField(
-                controller: descriptionController,
-                decoration: InputDecoration(
-                  labelText: 'Description',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.r),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.r),
-                    borderSide: BorderSide(
-                      color: AppColors.brownPrimary,
-                      width: 2,
-                    ),
+              SizedBox(height: 24.h),
+              ListTile(
+                leading: Icon(
+                  Icons.camera_alt,
+                  color: AppColors.brownPrimary,
+                  size: 24.sp,
+                ),
+                title: Text(
+                  'Take Photo',
+                  style: GoogleFonts.poppins(
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-                maxLines: 3,
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickImageForReplacement(onImageSelected);
+                },
               ),
+              ListTile(
+                leading: Icon(
+                  Icons.image,
+                  color: AppColors.brownPrimary,
+                  size: 24.sp,
+                ),
+                title: Text(
+                  'Choose from Gallery',
+                  style: GoogleFonts.poppins(
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickImageFromGalleryForReplacement(onImageSelected);
+                },
+              ),
+              SizedBox(height: 12.h),
             ],
           ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Cancel',
-              style: GoogleFonts.poppins(color: Colors.grey),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              setState(() {
-                memory['title'] = titleController.text;
-                memory['description'] = descriptionController.text;
-              });
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    'Memory updated',
-                    style: GoogleFonts.poppins(),
-                  ),
-                  backgroundColor: Colors.green,
-                ),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.brownPrimary,
-            ),
-            child: Text(
-              'Save',
-              style: GoogleFonts.poppins(
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
-              ),
-            ),
-          ),
-        ],
       ),
     );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // IMAGE PICKERS
+  // ═══════════════════════════════════════════════════════════════════
+  Future<void> _pickImageForReplacement(Function(File) onImageSelected) async {
+    try {
+      final XFile? image = await _imagePicker.pickImage(
+        source: ImageSource.camera,
+        imageQuality: 80,
+      );
+      if (image != null) {
+        onImageSelected(File(image.path));
+      }
+    } catch (e) {
+      debugPrint('Error picking image from camera: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error accessing camera: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _pickImageFromGalleryForReplacement(
+      Function(File) onImageSelected) async {
+    try {
+      final XFile? image = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 80,
+      );
+      if (image != null) {
+        onImageSelected(File(image.path));
+      }
+    } catch (e) {
+      debugPrint('Error picking image from gallery: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error accessing gallery: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   Future<void> _pickImageFromCamera() async {
@@ -1326,9 +1500,13 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  // ═══════════════════════════════════════════════════════════════════
+  // CREATE NEW MEMORY
+  // ═══════════════════════════════════════════════════════════════════
   void _showNewMemoryForm(File imageFile) {
     final titleController = TextEditingController();
     final descriptionController = TextEditingController();
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -1397,7 +1575,10 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: () => Navigator.pop(context),
             child: Text(
               'Cancel',
-              style: GoogleFonts.poppins(color: Colors.grey),
+              style: GoogleFonts.poppins(
+                fontWeight: FontWeight.w600,
+                color: Colors.grey,
+              ),
             ),
           ),
           ElevatedButton(
@@ -1419,9 +1600,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   SnackBar(
                     content: Text(
                       'Memory saved!',
-                      style: GoogleFonts.poppins(),
+                      style: GoogleFonts.poppins(
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                     backgroundColor: Colors.green,
+                    duration: const Duration(seconds: 2),
                   ),
                 );
               } else {
@@ -1452,142 +1636,9 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _replaceImage(Map<String, dynamic> memory) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          'Replace Image',
-          style: GoogleFonts.poppins(
-            fontWeight: FontWeight.w600,
-            color: AppColors.brownPrimary,
-          ),
-        ),
-        content: Text(
-          'Choose a new image for this memory',
-          style: GoogleFonts.poppins(fontSize: 14.sp),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _pickImageFromCamera();
-            },
-            child: Text(
-              'Take Photo',
-              style: GoogleFonts.poppins(
-                fontWeight: FontWeight.w600,
-                color: AppColors.brownPrimary,
-              ),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _pickImageFromGallery();
-            },
-            child: Text(
-              'Choose from Gallery',
-              style: GoogleFonts.poppins(
-                fontWeight: FontWeight.w600,
-                color: AppColors.brownPrimary,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showMemoryActionSheet(Map<String, dynamic> memory) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(20.r),
-            topRight: Radius.circular(20.r),
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(height: 12.h),
-              Container(
-                width: 40.w,
-                height: 4.h,
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
-                  borderRadius: BorderRadius.circular(2.r),
-                ),
-              ),
-              SizedBox(height: 24.h),
-              ListTile(
-                leading: Icon(
-                  Icons.visibility,
-                  color: AppColors.brownPrimary,
-                  size: 24.sp,
-                ),
-                title: Text(
-                  'View Memory',
-                  style: GoogleFonts.poppins(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  _viewMemory(memory);
-                },
-              ),
-              ListTile(
-                leading: Icon(
-                  Icons.edit,
-                  color: AppColors.brownPrimary,
-                  size: 24.sp,
-                ),
-                title: Text(
-                  'Edit Memory',
-                  style: GoogleFonts.poppins(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  _editMemory(memory);
-                },
-              ),
-              ListTile(
-                leading: Icon(
-                  Icons.delete,
-                  color: Colors.red,
-                  size: 24.sp,
-                ),
-                title: Text(
-                  'Delete Memory',
-                  style: GoogleFonts.poppins(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.red,
-                  ),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  _showDeleteConfirmation(memory);
-                },
-              ),
-              SizedBox(height: 12.h),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
+  // ═══════════════════════════════════════════════════════════════════
+  // DELETE CONFIRMATION
+  // ═══════════════════════════════════════════════════════════════════
   void _showDeleteConfirmation(Map<String, dynamic> memory) {
     showDialog(
       context: context,
@@ -1647,26 +1698,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ═══════════════════════════════════════════════════════════════════
-  // CALCULATE TOTAL SPENT FROM ALL TRIPS
+  // PHOTO ACTION SHEET
   // ═══════════════════════════════════════════════════════════════════
-  String _calculateTotalSpent() {
-    double total = 0;
-    for (var trip in trips) {
-      if (trip.expenses.isNotEmpty) {
-        total += trip.expenses.fold<double>(
-          0,
-          (sum, expense) => sum + expense.cost,
-        );
-      }
-    }
-    
-    // Format as k if >= 1000, otherwise show full amount
-    if (total >= 1000) {
-      return '₱${(total / 1000).toStringAsFixed(1)}k';
-    }
-    return '₱${total.toStringAsFixed(0)}';
-  }
-
   void _showPhotoActionSheet() {
     showModalBottomSheet(
       context: context,
@@ -1735,5 +1768,24 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
     );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // CALCULATE TOTAL SPENT
+  // ═══════════════════════════════════════════════════════════════════
+  String _calculateTotalSpent() {
+    double total = 0;
+    for (var trip in trips) {
+      if (trip.expenses.isNotEmpty) {
+        total += trip.expenses.fold(
+          0,
+          (sum, expense) => sum + expense.cost,
+        );
+      }
+    }
+    if (total >= 1000) {
+      return '₱${(total / 1000).toStringAsFixed(1)}k';
+    }
+    return '₱${total.toStringAsFixed(0)}';
   }
 }
