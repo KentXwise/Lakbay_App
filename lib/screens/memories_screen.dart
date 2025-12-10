@@ -9,6 +9,7 @@ import 'profile_screen.dart';
 import 'trip_detail_screen.dart';
 import '../models/trip_model.dart';
 import '../widgets/create_trip_modal.dart';
+import '../widgets/edit_activity_modal.dart';
 
 class HomeScreen extends StatefulWidget {
   final String userNickname;
@@ -410,127 +411,293 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // TRIP CARD
-  // ═══════════════════════════════════════════════════════════════════
-  Widget _buildTripCard(Trip trip) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => TripDetailScreen(trip: trip),
-          ),
-        );
-      },
-      child: Container(
-        margin: EdgeInsets.only(bottom: 16.h),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16.r),
-          border: Border.all(
-            color: Colors.grey.shade200,
-            width: 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 12,
-              offset: const Offset(0, 2),
-            ),
-          ],
+// ═══════════════════════════════════════════════════════════════════
+// TRIP CARD WITH LONG-PRESS DELETE
+// ═══════════════════════════════════════════════════════════════════
+Widget _buildTripCard(Trip trip) {
+  return GestureDetector(
+    onTap: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => TripDetailScreen(trip: trip),
         ),
-        child: Column(
-          children: [
-            // Image
-            ClipRRect(
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(16.r),
-                topRight: Radius.circular(16.r),
+      );
+    },
+    onLongPress: () {
+      _showTripActionSheet(trip);
+    },
+    child: Container(
+      margin: EdgeInsets.only(bottom: 16.h),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(
+          color: Colors.grey.shade200,
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // Image
+          ClipRRect(
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(16.r),
+              topRight: Radius.circular(16.r),
+            ),
+            child: Container(
+              height: 160.h,
+              color: Colors.grey.shade200,
+              child: Image.asset(
+                trip.image,
+                fit: BoxFit.cover,
+                width: double.infinity,
+                errorBuilder: (context, error, stackTrace) {
+                  return Center(
+                    child: Icon(
+                      Icons.image_not_supported_outlined,
+                      size: 40.sp,
+                      color: Colors.grey.shade400,
+                    ),
+                  );
+                },
               ),
-              child: Container(
-                height: 160.h,
-                color: Colors.grey.shade200,
-                child: Image.asset(
-                  trip.image,
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Center(
-                      child: Icon(
-                        Icons.image_not_supported_outlined,
-                        size: 40.sp,
-                        color: Colors.grey.shade400,
+            ),
+          ),
+          // Details
+          Padding(
+            padding: EdgeInsets.all(16.w),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  trip.title,
+                  style: GoogleFonts.poppins(
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.brownPrimary,
+                  ),
+                ),
+                SizedBox(height: 4.h),
+                Text(
+                  trip.destination,
+                  style: GoogleFonts.poppins(
+                    fontSize: 13.sp,
+                    color: Colors.grey.shade500,
+                  ),
+                ),
+                SizedBox(height: 12.h),
+                // Date and Budget Row
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Date
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.calendar_today,
+                          size: 14.sp,
+                          color: Colors.grey.shade400,
+                        ),
+                        SizedBox(width: 6.w),
+                        Text(
+                          '${trip.startDate} - ${trip.endDate}',
+                          style: GoogleFonts.poppins(
+                            fontSize: 12.sp,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
+                    ),
+                    // Budget
+                    Text(
+                      '₱${trip.budget}',
+                      style: GoogleFonts.poppins(
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.brownPrimary,
                       ),
-                    );
-                  },
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// TRIP ACTION SHEET - Long Press Menu (DELETE ONLY)
+// ═══════════════════════════════════════════════════════════════════
+void _showTripActionSheet(Trip trip) {
+  showModalBottomSheet(
+    context: context,
+    backgroundColor: Colors.transparent,
+    isScrollControlled: true,
+    builder: (context) => Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(20.r),
+          topRight: Radius.circular(20.r),
+        ),
+      ),
+      child: SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(height: 12.h),
+            Container(
+              width: 40.w,
+              height: 4.h,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2.r),
+              ),
+            ),
+            SizedBox(height: 24.h),
+            ListTile(
+              leading: Icon(
+                Icons.delete,
+                color: Colors.red,
+                size: 24.sp,
+              ),
+              title: Text(
+                'Delete Trip',
+                style: GoogleFonts.poppins(
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.red,
                 ),
               ),
+              onTap: () {
+                Navigator.pop(context);
+                _showTripDeleteConfirmation(trip);
+              },
             ),
-            // Details
-            Padding(
-              padding: EdgeInsets.all(16.w),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    trip.title,
-                    style: GoogleFonts.poppins(
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.brownPrimary,
-                    ),
-                  ),
-                  SizedBox(height: 4.h),
-                  Text(
-                    trip.destination,
-                    style: GoogleFonts.poppins(
-                      fontSize: 13.sp,
-                      color: Colors.grey.shade500,
-                    ),
-                  ),
-                  SizedBox(height: 12.h),
-                  // Date and Budget Row
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // Date
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.calendar_today,
-                            size: 14.sp,
-                            color: Colors.grey.shade400,
-                          ),
-                          SizedBox(width: 6.w),
-                          Text(
-                            '${trip.startDate} - ${trip.endDate}',
-                            style: GoogleFonts.poppins(
-                              fontSize: 12.sp,
-                              color: Colors.grey.shade600,
-                            ),
-                          ),
-                        ],
-                      ),
-                      // Budget
-                      Text(
-                        '₱${trip.budget}',
-                        style: GoogleFonts.poppins(
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.brownPrimary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
+            SizedBox(height: 12.h),
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// EDIT TRIP MODAL - Opens EditActivityModal for trip details
+// ═══════════════════════════════════════════════════════════════════
+void _showEditTripModal(Trip trip) {
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16.r),
+      ),
+      contentPadding: EdgeInsets.zero,
+      content: SingleChildScrollView(
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16.r),
+          ),
+          child: EditActivityModal(
+            activity: null,
+            tripId: trip.id ?? '1', // Use fallback if id is null
+            tripStartDate: trip.startDate,
+            tripEndDate: trip.endDate,
+            onSave: (activity) {
+              // Handle trip update
+              setState(() {
+                // Update trip logic here if needed
+                // For now, just show success message
+              });
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    'Trip updated successfully!',
+                    style: GoogleFonts.poppins(),
+                  ),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// TRIP DELETE CONFIRMATION DIALOG
+// ═══════════════════════════════════════════════════════════════════
+void _showTripDeleteConfirmation(Trip trip) {
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text(
+        'Delete Trip?',
+        style: GoogleFonts.poppins(
+          fontWeight: FontWeight.w600,
+          color: AppColors.brownPrimary,
+        ),
+      ),
+      content: Text(
+        'Are you sure you want to delete "${trip.title}"? This action cannot be undone.',
+        style: GoogleFonts.poppins(
+          fontSize: 14.sp,
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(
+            'Cancel',
+            style: GoogleFonts.poppins(
+              fontWeight: FontWeight.w600,
+              color: Colors.grey,
+            ),
+          ),
+        ),
+        TextButton(
+          onPressed: () {
+            Navigator.pop(context);
+            setState(() {
+              trips.removeWhere((t) => t.id == trip.id);
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Trip deleted',
+                  style: GoogleFonts.poppins(),
+                ),
+                backgroundColor: Colors.red,
+                duration: const Duration(seconds: 2),
+              ),
+            );
+          },
+          child: Text(
+            'Delete',
+            style: GoogleFonts.poppins(
+              fontWeight: FontWeight.w600,
+              color: Colors.red,
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
 
   // ═══════════════════════════════════════════════════════════════════
   // CREATE TRIP MODAL - Using CreateTripModal widget
