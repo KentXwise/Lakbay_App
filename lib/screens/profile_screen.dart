@@ -7,6 +7,8 @@ import '../widgets/logout_confirmation_modal.dart';
 import '../widgets/edit_profile_modal.dart';
 import 'login_screen.dart';
 import 'memories_screen.dart';
+import 'notif_screen.dart';
+import 'contact_us_screen.dart';
 
 
 class ProfileScreen extends StatefulWidget {

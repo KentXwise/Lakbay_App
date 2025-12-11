@@ -282,7 +282,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ),
                         ),
                       ),
-                      SizedBox(height: 30.h),
+                     /* SizedBox(height: 30.h),
                       Text(
                         'Or sign up with',
                         style:
@@ -317,7 +317,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           color: AppColors.textGray,
                         ),
                       ),
-                      SizedBox(height: 20.h),
+                    */  SizedBox(height: 20.h),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [

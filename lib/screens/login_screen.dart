@@ -233,7 +233,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                       ),
-                      SizedBox(height: 30.h),
+                    /*  SizedBox(height: 30.h),
                       Text(
                         'Or continue with',
                         style:
@@ -260,7 +260,8 @@ class _LoginScreenState extends State<LoginScreen> {
                             borderRadius: BorderRadius.circular(30.r),
                           ),
                         ),
-                      ),
+                      ), */
+                      
                       SizedBox(height: 40.h),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
