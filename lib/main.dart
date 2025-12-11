@@ -1,17 +1,22 @@
-// lib/main.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart'; // This file is created by 'flutterfire configure'
 import 'screens/login_screen.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Set status bar style IMMEDIATELY before app starts
+  // Initialize Firebase
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
   SystemChrome.setSystemUIOverlayStyle(
-    SystemUiOverlayStyle(
-      statusBarColor: Color(0xFFF5F5F5),  // ← Light gray/white background
-      statusBarIconBrightness: Brightness.dark,  // ← Dark icons
+    const SystemUiOverlayStyle(
+      statusBarColor: Color(0xFFF5F5F5),
+      statusBarIconBrightness: Brightness.dark,
       statusBarBrightness: Brightness.dark,
       systemNavigationBarColor: Colors.white,
       systemNavigationBarIconBrightness: Brightness.dark,
@@ -33,19 +38,15 @@ class MyApp extends StatelessWidget {
       builder: (context, child) {
         return MaterialApp(
           title: 'Lakbay App',
+          debugShowCheckedModeBanner: false,
           theme: ThemeData(
             useMaterial3: true,
             brightness: Brightness.light,
           ),
-          darkTheme: ThemeData(
-            useMaterial3: true,
-            brightness: Brightness.light,
-          ),
-          themeMode: ThemeMode.light,
           home: child,
         );
       },
-      child: LoginScreen(),
+      child: const LoginScreen(),
     );
   }
 }

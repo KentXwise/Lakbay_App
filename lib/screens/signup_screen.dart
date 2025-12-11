@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../core/app_colors.dart';
 import '../widgets/custom_textfield.dart';
 import '../widgets/success_modal.dart';
+import '../widgets/failure_modal.dart';
 import 'login_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -29,8 +30,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
   void initState() {
     super.initState();
     SystemChrome.setSystemUIOverlayStyle(
-      SystemUiOverlayStyle(
-        statusBarColor: const Color(0xFFF5F5F5),
+      const SystemUiOverlayStyle(
+        statusBarColor: Color(0xFFF5F5F5),
         statusBarIconBrightness: Brightness.dark,
         statusBarBrightness: Brightness.light,
         systemNavigationBarColor: Colors.white,
@@ -55,48 +56,72 @@ class _SignUpScreenState extends State<SignUpScreen> {
     String confirmPassword = confirmPasswordController.text.trim();
 
     if (nickname.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter your nickname')),
+      showDialog(
+        context: context,
+        builder: (context) => FailureModal(
+          title: 'Nickname Required',
+          message: 'Please choose a nickname to personalize your account.',
+          onConfirm: () {},
+        ),
       );
       return;
     }
 
     if (email.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter your email')),
+      showDialog(
+        context: context,
+        builder: (context) => FailureModal(
+          title: 'Email Required',
+          message: 'Please enter a valid email address to create your account.',
+          onConfirm: () {},
+        ),
       );
       return;
     }
 
     if (password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a password')),
+      showDialog(
+        context: context,
+        builder: (context) => FailureModal(
+          title: 'Password Required',
+          message: 'Please create a secure password for your account.',
+          onConfirm: () {},
+        ),
       );
       return;
     }
 
     if (password != confirmPassword) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Passwords do not match')),
+      showDialog(
+        context: context,
+        builder: (context) => FailureModal(
+          title: 'Password Mismatch',
+          message: 'The passwords you entered do not match. Please try again.',
+          onConfirm: () {},
+        ),
       );
       return;
     }
 
     if (password.length < 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Password must be at least 6 characters')),
+      showDialog(
+        context: context,
+        builder: (context) => FailureModal(
+          title: 'Weak Password',
+          message: 'For your security, your password must be at least 6 characters long.',
+          onConfirm: () {},
+        ),
       );
       return;
     }
 
+    // Success Simulation
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) => SuccessModal(
         title: 'Account Created!',
-        message:
-            'Welcome $nickname! Your account has been successfully created.',
+        message: 'Welcome to Lakbay, $nickname! Your account is ready. Let\'s get started.',
         buttonText: 'Continue to Login',
         onConfirm: () {
           Navigator.pushAndRemoveUntil(

@@ -10,4 +10,20 @@ class Member {
     required this.email,
     required this.role,
   });
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'fullName': fullName,
+    'email': email,
+    'role': role,
+  };
+
+  factory Member.fromJson(Map<String, dynamic> json) {
+    return Member(
+      id: json['id'] ?? '',
+      fullName: json['fullName'] ?? '',
+      email: json['email'] ?? '',
+      role: json['role'] ?? 'Member',
+    );
+  }
 }

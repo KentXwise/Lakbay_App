@@ -165,8 +165,7 @@ class _CreateTripModalState extends State<CreateTripModal> {
       ),
       builder: (BuildContext context) {
         return Container(
-        //  padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
-        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 40.h),
+          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 40.h),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -263,6 +262,13 @@ class _CreateTripModalState extends State<CreateTripModal> {
       return;
     }
 
+    // Determine initial image path. If picked, pass the raw path.
+    // The DatabaseService in Home Screen will handle saving it to persistent storage.
+    String imagePath = 'assets/images/photo1.jpg'; // Default asset
+    if (_selectedImage != null) {
+      imagePath = _selectedImage!.path;
+    }
+
     try {
       Trip newTrip = Trip(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -271,7 +277,7 @@ class _CreateTripModalState extends State<CreateTripModal> {
         startDate: startDateController.text,
         endDate: endDateController.text,
         budget: int.parse(budgetController.text),
-        image: _selectedImage?.path ?? 'assets/images/default_trip.png',
+        image: imagePath,
         members: [],
         activitiesList: [],
         expensesList: [],

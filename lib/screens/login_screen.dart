@@ -9,6 +9,7 @@ import 'signup_screen.dart';
 import '../widgets/forgot_password_modal.dart';
 import 'memories_screen.dart';
 import '../widgets/success_modal.dart';
+import '../widgets/failure_modal.dart';
 
 class LoginScreen extends StatefulWidget {
   final String? userNickname;
@@ -28,8 +29,8 @@ class _LoginScreenState extends State<LoginScreen> {
   void initState() {
     super.initState();
     SystemChrome.setSystemUIOverlayStyle(
-      SystemUiOverlayStyle(
-        statusBarColor: const Color(0xFFF5F5F5),
+      const SystemUiOverlayStyle(
+        statusBarColor: Color(0xFFF5F5F5),
         statusBarIconBrightness: Brightness.dark,
         statusBarBrightness: Brightness.light,
         systemNavigationBarColor: Colors.white,
@@ -49,28 +50,39 @@ class _LoginScreenState extends State<LoginScreen> {
     String userEmail = emailController.text.trim();
 
     if (userEmail.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter your email')),
+      showDialog(
+        context: context,
+        builder: (context) => FailureModal(
+          title: 'Email Required',
+          message: 'Please enter your email address to sign in.',
+          onConfirm: () {},
+        ),
       );
       return;
     }
 
     if (passwordController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter your password')),
+      showDialog(
+        context: context,
+        builder: (context) => FailureModal(
+          title: 'Password Required',
+          message: 'Please enter your password to continue.',
+          onConfirm: () {},
+        ),
       );
       return;
     }
 
+    // Success Simulation
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) => SuccessModal(
         title: 'Welcome Back!',
-        message: 'You have successfully signed in.',
-        buttonText: 'Continue',
+        message: 'You have successfully signed in. Let\'s plan your next adventure!',
+        buttonText: 'Let\'s Go',
         onConfirm: () {
-          String nickname = widget.userNickname ?? 'User';
+          String nickname = widget.userNickname ?? 'Traveler';
           Navigator.push(
             context,
             MaterialPageRoute(

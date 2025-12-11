@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "383740665458",
+    "project_id": "lakbay-app-166bf",
+    "storage_bucket": "lakbay-app-166bf.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:383740665458:android:fd313db546a49047d22ceb",
+        "android_client_info": {
+          "package_name": "com.example.lakbay_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDShtFIfx7JX4NgXCZOXSzYyMLjq9MKVd4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:io';
 import '../core/app_colors.dart';
 import '../models/trip_model.dart';
 import '../models/activity_model.dart';
@@ -12,25 +14,47 @@ import '../models/member_model.dart';
 import '../screens/tasks_screen.dart';
 import '../models/task_model.dart';
 import '../screens/trip_receipt_screen.dart';
-
+import '../services/database_service.dart';
 
 class TripDetailScreen extends StatefulWidget {
   final Trip trip;
 
-
   const TripDetailScreen({super.key, required this.trip});
-
 
   @override
   State<TripDetailScreen> createState() => _TripDetailScreenState();
 }
 
-
 class _TripDetailScreenState extends State<TripDetailScreen> {
   late String selectedTab;
   late List<Activity> activities;
   late Trip currentTrip;
+  late DatabaseService _dbService;
 
+  @override
+  void initState() {
+    super.initState();
+    selectedTab = 'Itinerary';
+    currentTrip = widget.trip;
+    // Map dynamic activities to strongly typed Activity objects
+    activities = currentTrip.activities.map((e) => e as Activity).toList();
+    
+    // Initialize DB Service
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      _dbService = DatabaseService(user.uid);
+    }
+  }
+
+  // Helper to save trip changes to Firestore
+  void _saveTripChanges(Trip updatedTrip) async {
+    setState(() {
+      currentTrip = updatedTrip;
+      // Sync local activities list
+      activities = updatedTrip.activities.map((e) => e as Activity).toList();
+    });
+    await _dbService.updateTrip(updatedTrip);
+  }
 
   void _showTripReceipt() {
     Navigator.push(
@@ -40,16 +64,6 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
       ),
     );
   }
-
-
-  @override
-  void initState() {
-    super.initState();
-    selectedTab = 'Itinerary';
-    activities = [];
-    currentTrip = widget.trip;
-  }
-
 
   int _calculateTripDays() {
     try {
@@ -75,9 +89,10 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
+    bool isLocalImage = !currentTrip.image.startsWith('assets/');
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -89,16 +104,23 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                   height: 200.h,
                   width: double.infinity,
                   color: Colors.grey.shade300,
-                  child: Image.asset(
-                    currentTrip.image,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        color: Colors.grey.shade300,
-                        child: Icon(Icons.image_not_supported),
-                      );
-                    },
-                  ),
+                  child: isLocalImage
+                      ? Image.file(
+                          File(currentTrip.image),
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => 
+                              const Center(child: Icon(Icons.broken_image)),
+                        )
+                      : Image.asset(
+                          currentTrip.image,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              color: Colors.grey.shade300,
+                              child: const Icon(Icons.image_not_supported),
+                            );
+                          },
+                        ),
                 ),
                 Positioned(
                   top: 16.h,
@@ -191,7 +213,6 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                       ),
                     ],
                   ),
-                  // Departure & Arrival Times Display
                   if (currentTrip.departureTime != null && currentTrip.departureTime!.isNotEmpty) ...[
                     SizedBox(height: 8.h),
                     Row(
@@ -262,7 +283,6 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
     );
   }
 
-
   Widget _buildTab(String tabName) {
     bool isSelected = selectedTab == tabName;
     return Expanded(
@@ -289,7 +309,6 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
       ),
     );
   }
-
 
   Widget _buildItineraryContent() {
     return Padding(
@@ -318,7 +337,7 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.add, color: Colors.white),
+                const Icon(Icons.add, color: Colors.white),
                 SizedBox(width: 8.w),
                 Text(
                   'Add Activity',
@@ -337,10 +356,8 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
     );
   }
 
-
   List<Widget> _buildActivitiesByDay() {
     List<Widget> widgets = [];
-
 
     if (activities.isEmpty) {
       widgets.add(
@@ -366,7 +383,6 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
         groupedByDay[activity.day]!.add(activity);
       }
 
-
       final sortedDays = groupedByDay.keys.toList()
         ..sort((a, b) {
           final aNum = int.tryParse(a.replaceAll(RegExp(r'\D'), '')) ?? 0;
@@ -374,17 +390,14 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
           return aNum.compareTo(bNum);
         });
 
-
       for (var day in sortedDays) {
         final dayActivities = groupedByDay[day]!;
-
 
         dayActivities.sort((a, b) {
           final timeA = _parseTime(a.time);
           final timeB = _parseTime(b.time);
           return timeA.compareTo(timeB);
         });
-
 
         widgets.add(
           Padding(
@@ -400,7 +413,6 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
           ),
         );
 
-
         for (var activity in dayActivities) {
           widgets.add(_buildActivityCard(activity));
           widgets.add(SizedBox(height: 12.h));
@@ -408,10 +420,8 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
       }
     }
 
-
     return widgets;
   }
-
 
   int _parseTime(String timeString) {
     try {
@@ -419,11 +429,9 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
       final timePart = parts[0];
       final period = parts.length > 1 ? parts[1] : 'AM';
 
-
       final timeSplit = timePart.split(':');
       int hour = int.parse(timeSplit[0]);
       int minute = int.parse(timeSplit.length > 1 ? timeSplit[1] : '0');
-
 
       if (period == 'AM') {
         if (hour == 12) hour = 0;
@@ -431,13 +439,11 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
         if (hour != 12) hour += 12;
       }
 
-
       return hour * 60 + minute;
     } catch (e) {
       return 0;
     }
   }
-
 
   Widget _buildActivityCard(Activity activity) {
     return GestureDetector(
@@ -454,16 +460,16 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
             Column(
               children: [
                 Container(
-                  width: 12.w,
-                  height: 12.h,
+                  width: 12,
+                  height: 12,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: AppColors.brownPrimary,
                   ),
                 ),
                 Container(
-                  width: 2.w,
-                  height: 40.h,
+                  width: 2,
+                  height: 40,
                   color: AppColors.brownPrimary,
                 ),
               ],
@@ -528,42 +534,26 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
     );
   }
 
-
   Widget _buildBudgetContent() {
     return BudgetScreen(
       trip: currentTrip,
-      onTripUpdated: (updatedTrip) {
-        setState(() {
-          currentTrip = updatedTrip;
-        });
-      },
+      onTripUpdated: _saveTripChanges,
     );
   }
-
 
   Widget _buildMembersContent() {
     return MembersScreen(
       trip: currentTrip,
-      onTripUpdated: (updatedTrip) {
-        setState(() {
-          currentTrip = updatedTrip;
-        });
-      },
+      onTripUpdated: _saveTripChanges,
     );
   }
-
 
   Widget _buildTaskContent() {
     return TasksScreen(
       trip: currentTrip,
-      onTripUpdated: (updatedTrip) {
-        setState(() {
-          currentTrip = updatedTrip;
-        });
-      },
+      onTripUpdated: _saveTripChanges,
     );
   }
-
 
   void _addActivity() {
     int tripDays = _calculateTripDays();
@@ -580,8 +570,11 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
         tripId: currentTrip.title,
         onSave: (Activity newActivity) {
           setState(() {
+            currentTrip.activities.add(newActivity);
+            // Sync local list for display
             activities.add(newActivity);
           });
+          _dbService.updateTrip(currentTrip);
         },
         existingActivitiesCount: activities.length,
         availableDays: daysList,
@@ -592,7 +585,6 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
     );
   }
 
-
   void _showActivityOptions(Activity activity) {
     showModalBottomSheet(
       context: context,
@@ -600,16 +592,16 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
         child: Wrap(
           children: [
             ListTile(
-              leading: Icon(Icons.edit, color: AppColors.brownPrimary),
-              title: Text('Edit'),
+              leading: const Icon(Icons.edit, color: AppColors.brownPrimary),
+              title: const Text('Edit'),
               onTap: () {
                 Navigator.pop(context);
                 _editActivity(activity);
               },
             ),
             ListTile(
-              leading: Icon(Icons.delete, color: Colors.red),
-              title: Text('Delete'),
+              leading: const Icon(Icons.delete, color: Colors.red),
+              title: const Text('Delete'),
               onTap: () {
                 Navigator.pop(context);
                 _deleteActivity(activity);
@@ -620,7 +612,6 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
       ),
     );
   }
-
 
   void _editActivity(Activity activity) {
     int tripDays = _calculateTripDays();
@@ -637,11 +628,14 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
         tripId: currentTrip.title,
         onSave: (Activity updatedActivity) {
           setState(() {
-            final index = activities.indexWhere((a) => a.id == activity.id);
+            final index = currentTrip.activities.indexWhere((a) => a.id == activity.id);
             if (index != -1) {
-              activities[index] = updatedActivity;
+              currentTrip.activities[index] = updatedActivity;
+              // Sync local
+              activities = currentTrip.activities.map((e) => e as Activity).toList();
             }
           });
+          _dbService.updateTrip(currentTrip);
         },
         availableDays: daysList,
         existingActivities: activities.cast<Activity>(),
@@ -651,16 +645,16 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
     );
   }
 
-
   void _deleteActivity(Activity activity) {
     setState(() {
+      currentTrip.activities.removeWhere((a) => a.id == activity.id);
       activities.removeWhere((a) => a.id == activity.id);
     });
+    _dbService.updateTrip(currentTrip);
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Activity deleted')),
+      const SnackBar(content: Text('Activity deleted')),
     );
   }
-
 
   void _editTripDetails() {
     showDialog(
@@ -686,9 +680,7 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
             changedFields.add('Budget');
           }
           
-          setState(() {
-            currentTrip = updatedTrip;
-          });
+          _saveTripChanges(updatedTrip); // Calls setState and saves to DB
           
           String notificationMessage;
           if (changedFields.isEmpty) {
@@ -705,7 +697,7 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
             SnackBar(
               content: Text(notificationMessage),
               backgroundColor: Colors.green,
-              duration: Duration(seconds: 2),
+              duration: const Duration(seconds: 2),
             ),
           );
         },

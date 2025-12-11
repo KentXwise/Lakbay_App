@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:io';
 import '../core/app_colors.dart';
 import 'profile_screen.dart';
 import 'trip_detail_screen.dart';
 import '../models/trip_model.dart';
 import '../widgets/create_trip_modal.dart';
+import '../services/database_service.dart';
 
 class HomeScreen extends StatefulWidget {
   final String userNickname;
@@ -24,26 +26,21 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
   final ImagePicker _imagePicker = ImagePicker();
-
-  // Trips data
-  List<Trip> trips = [
-    Trip(
-      id: '1',
-      title: 'Dagat',
-      destination: 'Davao',
-      startDate: '12/22/2025',
-      endDate: '12/24/2025',
-      budget: 5000,
-      image: 'assets/images/photo1.jpg',
-      members: [],
-      activitiesList: [],
-      expensesList: [],
-      tasksList: [],
-    ),
-  ];
-
-  // Empty memories list - no mock data
+  
+  // Database Service
+  late DatabaseService _dbService;
+  
+  // Memory list (For now local, could be moved to Firebase later)
   List<Map<String, dynamic>> memories = [];
+
+  @override
+  void initState() {
+    super.initState();
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      _dbService = DatabaseService(user.uid);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,7 +51,7 @@ class _HomeScreenState extends State<HomeScreen> {
           index: _selectedIndex,
           children: [
             _buildHomeTab(),
-            _buildTripsTab(),
+            _buildTripsTab(), // Modified to use StreamBuilder
             ProfileScreen(userNickname: widget.userNickname),
           ],
         ),
@@ -90,9 +87,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // FLOATING ACTION BUTTON - Create Trip
-  // ═══════════════════════════════════════════════════════════════════
   Widget _buildCreateTripFAB() {
     return GestureDetector(
       onTap: _showCreateTripModal,
@@ -119,10 +113,10 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // HOME TAB - Memories Display
-  // ═══════════════════════════════════════════════════════════════════
   Widget _buildHomeTab() {
+    // Note: To implement real calculation from Firestore, we would need to 
+    // fetch all trips first. For this simplified version, we calculate based on local view
+    // or you can create a FutureBuilder to sum up totals from DB.
     return Column(
       children: [
         Container(
@@ -162,11 +156,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               SizedBox(height: 24.h),
+              // Stats cards are static for now, connect to Stream if needed
               Row(
                 children: [
                   Expanded(
                     child: _buildStatCard(
-                      _calculateTotalSpent(),
+                      '--k', 
                       'Spent',
                       Icons.wallet_giftcard,
                     ),
@@ -182,7 +177,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   SizedBox(width: 12.w),
                   Expanded(
                     child: _buildStatCard(
-                      '${trips.length}',
+                      '--', 
                       'Trips',
                       Icons.card_travel,
                     ),
@@ -227,9 +222,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // EMPTY MEMORIES STATE - New User Experience
-  // ═══════════════════════════════════════════════════════════════════
   Widget _buildEmptyMemoriesState() {
     return Center(
       child: SingleChildScrollView(
@@ -327,114 +319,124 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // TRIPS TAB
-  // ═══════════════════════════════════════════════════════════════════
+  // --- TRIPS TAB WITH STREAM BUILDER ---
   Widget _buildTripsTab() {
-    return Column(
-      children: [
-        Container(
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: AppColors.brownPrimary,
-            borderRadius: BorderRadius.only(
-              bottomLeft: Radius.circular(24.r),
-              bottomRight: Radius.circular(24.r),
-            ),
-          ),
-          padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 35.h),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              RichText(
-                text: TextSpan(
-                  children: [
-                    TextSpan(
-                      text: 'Kamusta, ',
-                      style: GoogleFonts.poppins(
-                        fontSize: 16.sp,
-                        color: Colors.white70,
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                    TextSpan(
-                      text: '${widget.userNickname}!',
-                      style: GoogleFonts.poppins(
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
+    return StreamBuilder<List<Trip>>(
+      stream: _dbService.tripsStream,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        }
+
+        final trips = snapshot.data ?? [];
+
+        return Column(
+          children: [
+            Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: AppColors.brownPrimary,
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(24.r),
+                  bottomRight: Radius.circular(24.r),
                 ),
               ),
-              SizedBox(height: 8.h),
-              Text(
-                'Plan your next adventure',
-                style: GoogleFonts.poppins(
-                  fontSize: 14.sp,
-                  color: Colors.white70,
-                  fontWeight: FontWeight.w400,
-                ),
-              ),
-              SizedBox(height: 24.h),
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12.r),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.06),
-                      blurRadius: 12,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: TextField(
-                  decoration: InputDecoration(
-                    hintText: 'Search trips by name or destination...',
-                    hintStyle: GoogleFonts.poppins(
-                      fontSize: 13.sp,
-                      color: Colors.grey.shade400,
-                    ),
-                    prefixIcon: Icon(
-                      Icons.search,
-                      color: Colors.grey.shade400,
-                      size: 20.sp,
-                    ),
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(
-                      vertical: 14.h,
-                      horizontal: 0,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        Expanded(
-          child: trips.isEmpty
-              ? _buildEmptyTripsState()
-              : SingleChildScrollView(
-                  child: Padding(
-                    padding: EdgeInsets.all(24.w),
-                    child: Column(
+              padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 35.h),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  RichText(
+                    text: TextSpan(
                       children: [
-                        ...trips.map((trip) => _buildTripCard(trip)).toList(),
-                        SizedBox(height: 20.h),
+                        TextSpan(
+                          text: 'Kamusta, ',
+                          style: GoogleFonts.poppins(
+                            fontSize: 16.sp,
+                            color: Colors.white70,
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                        TextSpan(
+                          text: '${widget.userNickname}!',
+                          style: GoogleFonts.poppins(
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
                       ],
                     ),
                   ),
-                ),
-        ),
-      ],
+                  SizedBox(height: 8.h),
+                  Text(
+                    'Plan your next adventure',
+                    style: GoogleFonts.poppins(
+                      fontSize: 14.sp,
+                      color: Colors.white70,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                  SizedBox(height: 24.h),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12.r),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.06),
+                          blurRadius: 12,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: TextField(
+                      decoration: InputDecoration(
+                        hintText: 'Search trips by name or destination...',
+                        hintStyle: GoogleFonts.poppins(
+                          fontSize: 13.sp,
+                          color: Colors.grey.shade400,
+                        ),
+                        prefixIcon: Icon(
+                          Icons.search,
+                          color: Colors.grey.shade400,
+                          size: 20.sp,
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.symmetric(
+                          vertical: 14.h,
+                          horizontal: 0,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: trips.isEmpty
+                  ? _buildEmptyTripsState()
+                  : SingleChildScrollView(
+                      child: Padding(
+                        padding: EdgeInsets.all(24.w),
+                        child: Column(
+                          children: [
+                            ...trips.map((trip) => _buildTripCard(trip)).toList(),
+                            SizedBox(height: 20.h),
+                          ],
+                        ),
+                      ),
+                    ),
+            ),
+          ],
+        );
+      },
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // EMPTY TRIPS STATE
-  // ═══════════════════════════════════════════════════════════════════
   Widget _buildEmptyTripsState() {
     return Center(
       child: SingleChildScrollView(
@@ -502,10 +504,9 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // TRIP CARD
-  // ═══════════════════════════════════════════════════════════════════
   Widget _buildTripCard(Trip trip) {
+    bool isLocalImage = !trip.image.startsWith('assets/');
+    
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -516,9 +517,7 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       },
       onLongPress: () {
-        setState(() {
-          trip.isHovered = true;
-        });
+        _showTripDeleteConfirmation(trip);
       },
       child: Container(
         margin: EdgeInsets.only(bottom: 16.h),
@@ -547,20 +546,28 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Container(
                 height: 160.h,
                 color: Colors.grey.shade200,
-                child: Image.asset(
-                  trip.image,
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Center(
-                      child: Icon(
-                        Icons.image_not_supported_outlined,
-                        size: 40.sp,
-                        color: Colors.grey.shade400,
+                child: isLocalImage 
+                    ? Image.file(
+                        File(trip.image),
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        errorBuilder: (context, error, stackTrace) => 
+                            const Center(child: Icon(Icons.broken_image)),
+                      )
+                    : Image.asset(
+                        trip.image,
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Center(
+                            child: Icon(
+                              Icons.image_not_supported_outlined,
+                              size: 40.sp,
+                              color: Colors.grey.shade400,
+                            ),
+                          );
+                        },
                       ),
-                    );
-                  },
-                ),
               ),
             ),
             Padding(
@@ -594,59 +601,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           ],
                         ),
                       ),
-                      if (trip.isHovered)
-                        Row(
-                          children: [
-                            ElevatedButton(
-                              onPressed: () {
-                                _showTripDeleteConfirmation(trip);
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.red,
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 12.w,
-                                  vertical: 8.h,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8.r),
-                                ),
-                              ),
-                              child: Text(
-                                'Delete',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 12.sp,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                            SizedBox(width: 8.w),
-                            OutlinedButton(
-                              onPressed: () {
-                                setState(() {
-                                  trip.isHovered = false;
-                                });
-                              },
-                              style: OutlinedButton.styleFrom(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 12.w,
-                                  vertical: 8.h,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8.r),
-                                ),
-                              ),
-                              child: Text(
-                                'Cancel',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 12.sp,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.brownPrimary,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
                     ],
                   ),
                   SizedBox(height: 12.h),
@@ -689,9 +643,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // TRIP DELETE CONFIRMATION
-  // ═══════════════════════════════════════════════════════════════════
   void _showTripDeleteConfirmation(Trip trip) {
     showDialog(
       context: context,
@@ -713,9 +664,6 @@ class _HomeScreenState extends State<HomeScreen> {
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-              setState(() {
-                trip.isHovered = false;
-              });
             },
             child: Text(
               'Cancel',
@@ -726,21 +674,21 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           TextButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(context);
-              setState(() {
-                trips.removeWhere((t) => t.id == trip.id);
-              });
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    'Trip deleted',
-                    style: GoogleFonts.poppins(),
+              await _dbService.deleteTrip(trip.id);
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'Trip deleted',
+                      style: GoogleFonts.poppins(),
+                    ),
+                    backgroundColor: Colors.red,
+                    duration: const Duration(seconds: 2),
                   ),
-                  backgroundColor: Colors.red,
-                  duration: const Duration(seconds: 2),
-                ),
-              );
+                );
+              }
             },
             child: Text(
               'Delete',
@@ -755,34 +703,58 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // CREATE TRIP MODAL
-  // ═══════════════════════════════════════════════════════════════════
   void _showCreateTripModal() {
     showDialog(
       context: context,
       builder: (context) => CreateTripModal(
-        onSave: (Trip newTrip) {
-          setState(() {
-            trips.add(newTrip);
-          });
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Trip created!',
-                style: GoogleFonts.poppins(),
-              ),
-              backgroundColor: Colors.green,
-            ),
+        onSave: (Trip newTrip) async {
+          // Handle Image Persistence before saving to DB
+          String finalImagePath = newTrip.image;
+          
+          if (!newTrip.image.startsWith('assets/')) {
+            final file = File(newTrip.image);
+            if (await file.exists()) {
+              // Save to app documents via service
+              finalImagePath = await _dbService.saveImageLocally(file);
+            }
+          }
+
+          // Create final trip with persistent path
+          Trip finalTrip = Trip(
+            id: newTrip.id,
+            title: newTrip.title,
+            destination: newTrip.destination,
+            startDate: newTrip.startDate,
+            endDate: newTrip.endDate,
+            budget: newTrip.budget,
+            image: finalImagePath,
+            members: newTrip.members,
+            activitiesList: newTrip.activities,
+            expensesList: newTrip.expenses,
+            tasksList: newTrip.tasks,
+            departureTime: newTrip.departureTime,
+            arrivalTime: newTrip.arrivalTime,
           );
+
+          await _dbService.updateTrip(finalTrip);
+          
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Trip created!',
+                  style: GoogleFonts.poppins(),
+                ),
+                backgroundColor: Colors.green,
+              ),
+            );
+          }
         },
       ),
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // STAT CARD
-  // ═══════════════════════════════════════════════════════════════════
+  // --- STAT CARD ---
   Widget _buildStatCard(String value, String label, IconData icon) {
     return Container(
       decoration: BoxDecoration(
@@ -831,9 +803,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // MASONRY GALLERY - Only shown when memories exist
-  // ═══════════════════════════════════════════════════════════════════
+  // --- MASONRY GALLERY (MEMORIES) ---
   Widget _buildMasonryGallery() {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -864,9 +834,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // MEMORY CARD - Enhanced with Tap & Long-Press
-  // ═══════════════════════════════════════════════════════════════════
   Widget _buildMemoryCard(Map<String, dynamic> memory,
       {required double height}) {
     return GestureDetector(
@@ -975,9 +942,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // ADD PHOTO CARD - Fully Functional
-  // ═══════════════════════════════════════════════════════════════════
   Widget _buildAddPhotoCard() {
     return GestureDetector(
       onTap: _showPhotoActionSheet,
@@ -1062,9 +1026,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // VIEW MEMORY - Read-Only Modal (Tap)
-  // ═══════════════════════════════════════════════════════════════════
   void _viewMemory(Map<String, dynamic> memory) {
     showDialog(
       context: context,
@@ -1146,9 +1107,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // MEMORY ACTION SHEET - Long Press (Edit, Delete)
-  // ═══════════════════════════════════════════════════════════════════
   void _showMemoryActionSheet(Map<String, dynamic> memory) {
     showModalBottomSheet(
       context: context,
@@ -1220,9 +1178,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // EDIT MEMORY - with Image Replacement
-  // ═══════════════════════════════════════════════════════════════════
   void _editMemory(Map<String, dynamic> memory) {
     final titleController = TextEditingController(text: memory['title']);
     final descriptionController =
@@ -1420,9 +1375,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // IMAGE REPLACE OPTIONS
-  // ═══════════════════════════════════════════════════════════════════
   void _showImageReplaceOptions(
     Map<String, dynamic> memory,
     Function(File) onImageSelected,
@@ -1496,9 +1448,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // IMAGE PICKER - Camera (New Memory)
-  // ═══════════════════════════════════════════════════════════════════
   Future<void> _pickImageFromCamera() async {
     try {
       final XFile? image = await _imagePicker.pickImage(
@@ -1519,9 +1468,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // IMAGE PICKER - Gallery (New Memory)
-  // ═══════════════════════════════════════════════════════════════════
   Future<void> _pickImageFromGallery() async {
     try {
       final XFile? image = await _imagePicker.pickImage(
@@ -1542,9 +1488,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // IMAGE PICKER - Camera (For Replacement)
-  // ═══════════════════════════════════════════════════════════════════
   Future<void> _pickImageForReplacement(Function(File) onImageSelected) async {
     try {
       final XFile? image = await _imagePicker.pickImage(
@@ -1565,9 +1508,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // IMAGE PICKER - Gallery (For Replacement)
-  // ═══════════════════════════════════════════════════════════════════
   Future<void> _pickImageFromGalleryForReplacement(
       Function(File) onImageSelected) async {
     try {
@@ -1589,9 +1529,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // CREATE NEW MEMORY - Form Dialog
-  // ═══════════════════════════════════════════════════════════════════
   void _showNewMemoryForm(File imageFile) {
     final titleController = TextEditingController();
     final descriptionController = TextEditingController();
@@ -1725,9 +1662,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // DELETE CONFIRMATION
-  // ═══════════════════════════════════════════════════════════════════
   void _showDeleteConfirmation(Map<String, dynamic> memory) {
     showDialog(
       context: context,
@@ -1786,9 +1720,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // PHOTO ACTION SHEET - Camera/Gallery Selection
-  // ═══════════════════════════════════════════════════════════════════
   void _showPhotoActionSheet() {
     showModalBottomSheet(
       context: context,
@@ -1857,24 +1788,5 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
     );
-  }
-
-  // ═══════════════════════════════════════════════════════════════════
-  // CALCULATE TOTAL SPENT
-  // ═══════════════════════════════════════════════════════════════════
-  String _calculateTotalSpent() {
-    double total = 0;
-    for (var trip in trips) {
-      if (trip.expenses.isNotEmpty) {
-        total += trip.expenses.fold(
-          0,
-          (sum, expense) => sum + expense.cost,
-        );
-      }
-    }
-    if (total >= 1000) {
-      return '₱${(total / 1000).toStringAsFixed(1)}k';
-    }
-    return '₱${total.toStringAsFixed(0)}';
   }
 }

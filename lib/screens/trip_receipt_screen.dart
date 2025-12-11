@@ -1,7 +1,12 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 import '../core/app_colors.dart';
 import '../models/trip_model.dart';
 
@@ -47,28 +52,260 @@ class _TripReceiptScreenState extends State<TripReceiptScreen> {
     return _calculateTotalSpent() / trip.members.length;
   }
 
-  // Print functionality
-  void _printReceipt() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Printing receipt...'),
-        backgroundColor: AppColors.brownPrimary,
+  // --- PDF GENERATION LOGIC ---
+  Future<Uint8List> _generatePdf(PdfPageFormat format) async {
+    final doc = pw.Document();
+
+    // Load Fonts
+    final fontRegular = await PdfGoogleFonts.poppinsRegular();
+    final fontBold = await PdfGoogleFonts.poppinsSemiBold();
+    final fontItalic = await PdfGoogleFonts.poppinsItalic();
+
+    // Load Logo (Ensure this asset exists in your pubspec.yaml)
+    final logoImage = await rootBundle.load('assets/images/Lakbay_Logo.png');
+    final imageBytes = logoImage.buffer.asUint8List();
+
+    // Calculations
+    final totalSpent = _calculateTotalSpent();
+    final remaining = _calculateRemaining();
+    final perPersonShare = _calculatePerPersonShare();
+    final brownColor = PdfColor.fromInt(0xFF5B2708); // AppColors.brownPrimary
+    final lightBrownColor = PdfColor.fromInt(0xFFF5E6D3);
+
+    doc.addPage(
+      pw.MultiPage(
+        pageTheme: pw.PageTheme(
+          pageFormat: format,
+          theme: pw.ThemeData.withFont(
+            base: fontRegular,
+            bold: fontBold,
+            italic: fontItalic,
+          ),
+          buildBackground: (context) => pw.FullPage(
+            ignoreMargins: true,
+            child: pw.Container(color: PdfColor.fromInt(0xFFF5F5F5)), // Grey background
+          ),
+        ),
+        header: (context) => pw.Container(
+          decoration: pw.BoxDecoration(
+            color: brownColor,
+            borderRadius: const pw.BorderRadius.vertical(top: pw.Radius.circular(10)),
+          ),
+          padding: const pw.EdgeInsets.symmetric(vertical: 20),
+          width: double.infinity,
+          child: pw.Column(
+            children: [
+              pw.Image(pw.MemoryImage(imageBytes), width: 50, height: 50),
+              pw.SizedBox(height: 10),
+              pw.Text(
+                'LAKBAY',
+                style: pw.TextStyle(
+                  color: PdfColors.white,
+                  fontSize: 24,
+                  fontWeight: pw.FontWeight.bold,
+                  letterSpacing: 2,
+                ),
+              ),
+              pw.Text(
+                'Travel Receipt',
+                style: const pw.TextStyle(
+                  color: PdfColors.white,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        ),
+        build: (context) => [
+          pw.Container(
+            padding: const pw.EdgeInsets.all(20),
+            decoration: const pw.BoxDecoration(
+              color: PdfColors.white,
+              borderRadius: pw.BorderRadius.vertical(bottom: pw.Radius.circular(10)),
+            ),
+            child: pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                // Trip Info
+                _buildPdfSectionTitle('Trip Information', brownColor),
+                pw.SizedBox(height: 10),
+                _buildPdfInfoRow('Trip Name:', trip.title, brownColor),
+                _buildPdfInfoRow('Destination:', trip.destination, brownColor),
+                _buildPdfInfoRow('Dates:', '${trip.startDate} - ${trip.endDate}', brownColor),
+                _buildPdfInfoRow('Budget:', 'P${trip.budget.toStringAsFixed(0)}', brownColor),
+                pw.SizedBox(height: 20),
+                pw.Divider(),
+
+                // Members
+                if (trip.members.isNotEmpty) ...[
+                  pw.SizedBox(height: 20),
+                  _buildPdfSectionTitle('Travel Group', brownColor),
+                  pw.SizedBox(height: 10),
+                  pw.Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    children: trip.members.map((m) {
+                      return pw.Container(
+                        padding: const pw.EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: pw.BoxDecoration(
+                          color: PdfColor.fromInt(0xFFEEEEEE),
+                          borderRadius: pw.BorderRadius.circular(20),
+                        ),
+                        child: pw.Text(
+                          m.fullName, // Use fullName
+                          style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                  pw.SizedBox(height: 20),
+                  pw.Divider(),
+                ],
+
+                // Expenses
+                if (trip.expenses.isNotEmpty) ...[
+                  pw.SizedBox(height: 20),
+                  _buildPdfSectionTitle('Expenses', brownColor),
+                  pw.SizedBox(height: 10),
+                  ...trip.expenses.map((e) => pw.Container(
+                        margin: const pw.EdgeInsets.only(bottom: 8),
+                        child: pw.Row(
+                          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                          children: [
+                            pw.Column(
+                              crossAxisAlignment: pw.CrossAxisAlignment.start,
+                              children: [
+                                pw.Text(e.description, style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 11)),
+                                pw.Text(e.category, style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey)),
+                              ],
+                            ),
+                            pw.Text('P${e.cost.toStringAsFixed(0)}', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColor.fromInt(0xFFD4A574))),
+                          ],
+                        ),
+                      )),
+                  pw.SizedBox(height: 20),
+                  pw.Divider(),
+                ],
+
+                // Per Person Share
+                if (trip.members.isNotEmpty && trip.expenses.isNotEmpty) ...[
+                   pw.SizedBox(height: 20),
+                   pw.Container(
+                     padding: const pw.EdgeInsets.all(12),
+                     decoration: pw.BoxDecoration(
+                       color: lightBrownColor,
+                       borderRadius: pw.BorderRadius.circular(8),
+                     ),
+                     child: pw.Row(
+                       mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                       children: [
+                         pw.Text('Fair Split (${trip.members.length} members)', style: pw.TextStyle(color: brownColor, fontWeight: pw.FontWeight.bold)),
+                         pw.Text('P${perPersonShare.toStringAsFixed(2)} / person', style: pw.TextStyle(color: brownColor, fontWeight: pw.FontWeight.bold, fontSize: 14)),
+                       ],
+                     ),
+                   ),
+                   pw.SizedBox(height: 20),
+                ],
+
+                // Summary
+                pw.Container(
+                  padding: const pw.EdgeInsets.all(15),
+                  decoration: pw.BoxDecoration(
+                    color: brownColor,
+                    borderRadius: pw.BorderRadius.circular(8),
+                  ),
+                  child: pw.Row(
+                    mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                    children: [
+                      pw.Column(
+                        crossAxisAlignment: pw.CrossAxisAlignment.start,
+                        children: [
+                          pw.Text('Total Spent', style: const pw.TextStyle(color: PdfColors.white, fontSize: 10)),
+                          pw.Text('P${totalSpent.toStringAsFixed(0)}', style: pw.TextStyle(color: PdfColors.white, fontSize: 20, fontWeight: pw.FontWeight.bold)),
+                        ],
+                      ),
+                       pw.Column(
+                        crossAxisAlignment: pw.CrossAxisAlignment.end,
+                        children: [
+                          pw.Text('Remaining', style: const pw.TextStyle(color: PdfColors.white, fontSize: 10)),
+                          pw.Text('P${remaining.toStringAsFixed(0)}', style: pw.TextStyle(color: PdfColor.fromInt(0xFFD4A574), fontSize: 20, fontWeight: pw.FontWeight.bold)),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+        footer: (context) => pw.Center(
+          child: pw.Column(
+            children: [
+              pw.SizedBox(height: 20),
+              pw.Text('"Ang bawat lakbay ay puno ng alaala"', style: pw.TextStyle(fontStyle: pw.FontStyle.italic, fontSize: 10, color: PdfColors.grey600)),
+              pw.Text('Generated by Lakbay', style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey500)),
+            ],
+          ),
+        ),
       ),
     );
-    // TODO: Implement actual print functionality
-    // You can use: https://pub.dev/packages/printing
+
+    return doc.save();
+  }
+
+  pw.Widget _buildPdfSectionTitle(String title, PdfColor color) {
+    return pw.Text(
+      title,
+      style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, color: color),
+    );
+  }
+
+  pw.Widget _buildPdfInfoRow(String label, String value, PdfColor color) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.only(bottom: 5),
+      child: pw.Row(
+        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+        children: [
+          pw.Text(label, style: const pw.TextStyle(fontSize: 11, color: PdfColors.grey700)),
+          pw.Text(value, style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold, color: color)),
+        ],
+      ),
+    );
+  }
+
+  // --- ACTIONS ---
+
+  // Print functionality
+  Future<void> _printReceipt() async {
+    try {
+      await Printing.layoutPdf(
+        onLayout: (PdfPageFormat format) async => _generatePdf(format),
+        name: 'Lakbay_Receipt_${trip.title}',
+      );
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error printing: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
   }
 
   // Download PDF functionality
-  void _downloadPDF() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Downloading receipt as PDF...'),
-        backgroundColor: AppColors.brownPrimary,
-      ),
-    );
-    // TODO: Implement actual PDF generation
-    // You can use: https://pub.dev/packages/pdf and https://pub.dev/packages/printing
+  Future<void> _downloadPDF() async {
+    try {
+      final pdfBytes = await _generatePdf(PdfPageFormat.a4);
+      await Printing.sharePdf(
+        bytes: pdfBytes,
+        filename: 'Lakbay_Receipt_${trip.title}.pdf',
+      );
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error downloading: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
   }
 
   @override
@@ -98,11 +335,7 @@ class _TripReceiptScreenState extends State<TripReceiptScreen> {
         actions: [
           IconButton(
             icon: Icon(Icons.share, color: AppColors.brownPrimary),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Share feature coming soon!')),
-              );
-            },
+            onPressed: _downloadPDF, // Share/Download is usually the same action in mobile
           ),
         ],
       ),
@@ -139,7 +372,7 @@ class _TripReceiptScreenState extends State<TripReceiptScreen> {
                       padding: EdgeInsets.symmetric(vertical: 32.h),
                       child: Column(
                         children: [
-                          // Lakbay Logo from assets
+                          // Lakbay Logo
                           Image.asset(
                             'assets/images/Lakbay_Logo.png',
                             height: 60.h,
@@ -211,7 +444,7 @@ class _TripReceiptScreenState extends State<TripReceiptScreen> {
                                               BorderRadius.circular(20.r),
                                         ),
                                         child: Text(
-                                          member.toString(),
+                                          member.fullName, // Updated to use fullName
                                           style: GoogleFonts.poppins(
                                             fontSize: 12.sp,
                                             color: Colors.grey.shade700,
@@ -725,7 +958,7 @@ class _TripReceiptScreenState extends State<TripReceiptScreen> {
                     ),
                     SizedBox(width: 12.w),
                     Text(
-                      member.toString(),
+                      member.fullName, // Updated to use fullName
                       style: GoogleFonts.poppins(
                         fontSize: 13.sp,
                         fontWeight: FontWeight.w500,

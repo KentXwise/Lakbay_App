@@ -5,7 +5,7 @@ class TaskItem {
   final String? dueDate;
   final String? assignedTo;
   final bool isCompleted;
-  final int priority; // 0 = Low, 1 = Medium, 2 = High
+  final int priority;
 
   TaskItem({
     required this.id,
@@ -34,6 +34,28 @@ class TaskItem {
       assignedTo: assignedTo ?? this.assignedTo,
       isCompleted: isCompleted ?? this.isCompleted,
       priority: priority ?? this.priority,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'title': title,
+    'description': description,
+    'dueDate': dueDate,
+    'assignedTo': assignedTo,
+    'isCompleted': isCompleted,
+    'priority': priority,
+  };
+
+  factory TaskItem.fromJson(Map<String, dynamic> json) {
+    return TaskItem(
+      id: json['id'] ?? '',
+      title: json['title'] ?? '',
+      description: json['description'],
+      dueDate: json['dueDate'],
+      assignedTo: json['assignedTo'],
+      isCompleted: json['isCompleted'] ?? false,
+      priority: json['priority'] ?? 1,
     );
   }
 }
