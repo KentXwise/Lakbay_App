@@ -1,5 +1,5 @@
 // ============================================
-// UPDATED EDIT_PROFILE_MODAL.DART - WITH DATA RETURN
+// UPDATED EDIT_PROFILE_MODAL.DART
 // ============================================
 
 import 'package:flutter/material.dart';
@@ -45,25 +45,14 @@ class _EditProfileModalState extends State<EditProfileModal> {
   @override
   void initState() {
     super.initState();
-    // Initialize controllers with existing data
-    fullNameController = TextEditingController(
-      text: widget.initialData['name'] ?? '',
-    );
-    emailController = TextEditingController(
-      text: widget.initialData['email'] ?? '',
-    );
-    phoneController = TextEditingController(
-      text: widget.initialData['phone'] ?? '',
-    );
-    locationController = TextEditingController(
-      text: widget.initialData['location'] ?? '',
-    );
-    birthdateController = TextEditingController(
-      text: widget.initialData['birthdate'] ?? '',
-    );
-    bioController = TextEditingController(
-      text: widget.initialData['bio'] ?? '',
-    );
+    // Initialize controllers with empty text so the Hint Text (Placeholder) shows
+    fullNameController = TextEditingController();
+    emailController = TextEditingController();
+    phoneController = TextEditingController();
+    locationController = TextEditingController();
+    birthdateController = TextEditingController();
+    bioController = TextEditingController();
+    
     currentPasswordController = TextEditingController();
     newPasswordController = TextEditingController();
     confirmPasswordController = TextEditingController();
@@ -110,7 +99,17 @@ class _EditProfileModalState extends State<EditProfileModal> {
   }
 
   void _handleSave() {
-    if (fullNameController.text.isEmpty || emailController.text.isEmpty) {
+    // Logic: If the user typed something, use it. 
+    // If not (empty), fallback to the initial data (what was shown in the placeholder).
+    String name = fullNameController.text.isNotEmpty 
+        ? fullNameController.text 
+        : (widget.initialData['name'] ?? '');
+        
+    String email = emailController.text.isNotEmpty 
+        ? emailController.text 
+        : (widget.initialData['email'] ?? '');
+
+    if (name.isEmpty || email.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please fill in all required fields')),
       );
@@ -119,12 +118,20 @@ class _EditProfileModalState extends State<EditProfileModal> {
 
     // Create a map with updated data
     Map<String, String> updatedData = {
-      'name': fullNameController.text,
-      'email': emailController.text,
-      'phone': phoneController.text,
-      'location': locationController.text,
-      'birthdate': birthdateController.text,
-      'bio': bioController.text,
+      'name': name,
+      'email': email,
+      'phone': phoneController.text.isNotEmpty 
+          ? phoneController.text 
+          : (widget.initialData['phone'] ?? ''),
+      'location': locationController.text.isNotEmpty 
+          ? locationController.text 
+          : (widget.initialData['location'] ?? ''),
+      'birthdate': birthdateController.text.isNotEmpty 
+          ? birthdateController.text 
+          : (widget.initialData['birthdate'] ?? ''),
+      'bio': bioController.text.isNotEmpty 
+          ? bioController.text 
+          : (widget.initialData['bio'] ?? ''),
     };
 
     Navigator.pop(context);
@@ -398,33 +405,38 @@ class _EditProfileModalState extends State<EditProfileModal> {
                     _buildFormField(
                       label: 'Full Name',
                       controller: fullNameController,
-                      hintText: 'e.g., John Doe',
+                      // Display current name as placeholder
+                      hintText: widget.initialData['name'] ?? 'e.g., John Doe',
                     ),
                     SizedBox(height: 14.h),
                     _buildFormField(
                       label: 'Email Address',
                       controller: emailController,
-                      hintText: 'e.g., john@example.com',
+                      // Display current email as placeholder
+                      hintText: widget.initialData['email'] ?? 'e.g., john@example.com',
                       keyboardType: TextInputType.emailAddress,
                     ),
                     SizedBox(height: 14.h),
                     _buildFormField(
                       label: 'Phone Number',
                       controller: phoneController,
-                      hintText: 'e.g., +63 917 123 4567',
+                      // Display current phone as placeholder
+                      hintText: widget.initialData['phone'] ?? 'e.g., +63 917 123 4567',
                       keyboardType: TextInputType.phone,
                     ),
                     SizedBox(height: 14.h),
                     _buildFormField(
                       label: 'Location',
                       controller: locationController,
-                      hintText: 'e.g., Panabo, Philippines',
+                      // Display current location as placeholder
+                      hintText: widget.initialData['location'] ?? 'e.g., Panabo, Philippines',
                     ),
                     SizedBox(height: 14.h),
                     _buildFormField(
                       label: 'Birthdate',
                       controller: birthdateController,
-                      hintText: 'Select your birthdate',
+                      // Display current birthdate as placeholder
+                      hintText: widget.initialData['birthdate'] ?? 'Select your birthdate',
                       readOnly: true,
                       onTap: () async {
                         final DateTime? picked = await showDatePicker(
@@ -443,7 +455,8 @@ class _EditProfileModalState extends State<EditProfileModal> {
                     _buildFormField(
                       label: 'Bio',
                       controller: bioController,
-                      hintText: 'Tell us about yourself...',
+                      // Display current bio as placeholder
+                      hintText: widget.initialData['bio'] ?? 'Tell us about yourself...',
                       maxLines: 4,
                       maxLength: 150,
                     ),

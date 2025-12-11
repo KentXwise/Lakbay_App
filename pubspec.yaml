@@ -26,17 +26,36 @@ dependencies:
   firebase_core: ^3.15.2
   firebase_auth: ^5.7.0
   cloud_firestore: ^5.6.12
-  path_provider: ^2.1.0 # For local image storage
-   
+  path_provider: ^2.1.0 
    
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.13.1  
+  flutter_native_splash: ^2.4.0
 
 flutter:
   uses-material-design: true
   assets:
     - assets/images/
     - assets/icons/
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/images/Lakbay_Logo.png"
+  min_sdk_android: 21
+
+flutter_native_splash:
+  # 1. Background Color (Fills the screen so the image doesn't stretch)
+  color: "#5a2708" 
+
+  # 2. The Logo (Centered automatically, maintains aspect ratio)
+  image: "assets/images/app_icon.png"
+
+  # 3. Android 12+ Specific Settings (Required for newer phones)
+  android_12:
+    image: "assets/images/app_icon.png"
+    icon_background_color: "#5a2708"

@@ -10,6 +10,7 @@ import 'trip_detail_screen.dart';
 import '../models/trip_model.dart';
 import '../widgets/create_trip_modal.dart';
 import '../services/database_service.dart';
+import 'login_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final String userNickname;
@@ -30,15 +31,27 @@ class _HomeScreenState extends State<HomeScreen> {
   // Database Service
   late DatabaseService _dbService;
   
-  // Memory list (For now local, could be moved to Firebase later)
+  // Memory list (Local state)
   List<Map<String, dynamic>> memories = [];
 
   @override
   void initState() {
     super.initState();
     final user = FirebaseAuth.instance.currentUser;
+    
     if (user != null) {
       _dbService = DatabaseService(user.uid);
+    } else {
+      // Safety check: redirect if no user found
+      _dbService = DatabaseService('dummy_id'); 
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const LoginScreen()),
+          );
+        }
+      });
     }
   }
 
@@ -51,7 +64,7 @@ class _HomeScreenState extends State<HomeScreen> {
           index: _selectedIndex,
           children: [
             _buildHomeTab(),
-            _buildTripsTab(), // Modified to use StreamBuilder
+            _buildTripsTab(), 
             ProfileScreen(userNickname: widget.userNickname),
           ],
         ),
@@ -113,112 +126,131 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // --- HOME TAB WITH REAL STATS ---
   Widget _buildHomeTab() {
-    // Note: To implement real calculation from Firestore, we would need to 
-    // fetch all trips first. For this simplified version, we calculate based on local view
-    // or you can create a FutureBuilder to sum up totals from DB.
-    return Column(
-      children: [
-        Container(
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: AppColors.brownPrimary,
-            borderRadius: BorderRadius.only(
-              bottomLeft: Radius.circular(24.r),
-              bottomRight: Radius.circular(24.r),
-            ),
-          ),
-          padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 35.h),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              RichText(
-                text: TextSpan(
-                  children: [
-                    TextSpan(
-                      text: 'Lakbay, ',
-                      style: GoogleFonts.poppins(
-                        fontSize: 16.sp,
-                        color: Colors.white70,
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                    TextSpan(
-                      text: 'Hi, ${widget.userNickname}!',
-                      style: GoogleFonts.poppins(
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const TextSpan(text: ' 👋'),
-                  ],
+    // We wrap the home tab in a StreamBuilder to get real-time trip data
+    return StreamBuilder<List<Trip>>(
+      stream: _dbService.tripsStream,
+      builder: (context, snapshot) {
+        // Default values while loading or if error
+        int tripCount = 0;
+        int totalSpent = 0;
+
+        if (snapshot.hasData) {
+          final trips = snapshot.data!;
+          tripCount = trips.length;
+          // Calculate total spent across all trips using the helper method in Trip model
+          totalSpent = trips.fold(0, (sum, trip) => sum + trip.getTotalSpent());
+        }
+
+        return Column(
+          children: [
+            Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: AppColors.brownPrimary,
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(24.r),
+                  bottomRight: Radius.circular(24.r),
                 ),
               ),
-              SizedBox(height: 24.h),
-              // Stats cards are static for now, connect to Stream if needed
-              Row(
+              padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 35.h),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: _buildStatCard(
-                      '--k', 
-                      'Spent',
-                      Icons.wallet_giftcard,
+                  RichText(
+                    text: TextSpan(
+                      children: [
+                        TextSpan(
+                          text: 'Lakbay, ',
+                          style: GoogleFonts.poppins(
+                            fontSize: 16.sp,
+                            color: Colors.white70,
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                        TextSpan(
+                          text: 'Hi, ${widget.userNickname}!',
+                          style: GoogleFonts.poppins(
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const TextSpan(text: ' 👋'),
+                      ],
                     ),
                   ),
-                  SizedBox(width: 12.w),
-                  Expanded(
-                    child: _buildStatCard(
-                      '${memories.length}',
-                      'Memories',
-                      Icons.photo_library_outlined,
-                    ),
-                  ),
-                  SizedBox(width: 12.w),
-                  Expanded(
-                    child: _buildStatCard(
-                      '--', 
-                      'Trips',
-                      Icons.card_travel,
-                    ),
+                  SizedBox(height: 24.h),
+                  Row(
+                    children: [
+                      // Real Spent Data
+                      Expanded(
+                        child: _buildStatCard(
+                          totalSpent >= 1000 
+                              ? '${(totalSpent / 1000).toStringAsFixed(1)}k' // Format as 1.5k if > 1000
+                              : totalSpent.toString(),
+                          'Spent',
+                          Icons.wallet_giftcard,
+                        ),
+                      ),
+                      SizedBox(width: 12.w),
+                      // Real Memories Count (Local List)
+                      Expanded(
+                        child: _buildStatCard(
+                          '${memories.length}',
+                          'Memories',
+                          Icons.photo_library_outlined,
+                        ),
+                      ),
+                      SizedBox(width: 12.w),
+                      // Real Trip Count
+                      Expanded(
+                        child: _buildStatCard(
+                          '$tripCount', 
+                          'Trips',
+                          Icons.card_travel,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ],
-          ),
-        ),
-        Expanded(
-          child: memories.isEmpty
-              ? _buildEmptyMemoriesState()
-              : SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      SizedBox(height: 32.h),
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 24.w),
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            'Your Memories',
-                            style: GoogleFonts.poppins(
-                              fontSize: 18.sp,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.brownPrimary,
+            ),
+            Expanded(
+              child: memories.isEmpty
+                  ? _buildEmptyMemoriesState()
+                  : SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          SizedBox(height: 32.h),
+                          Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 24.w),
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                'Your Memories',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 18.sp,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.brownPrimary,
+                                ),
+                              ),
                             ),
                           ),
-                        ),
+                          SizedBox(height: 20.h),
+                          Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 24.w),
+                            child: _buildMasonryGallery(),
+                          ),
+                          SizedBox(height: 32.h),
+                        ],
                       ),
-                      SizedBox(height: 20.h),
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 24.w),
-                        child: _buildMasonryGallery(),
-                      ),
-                      SizedBox(height: 32.h),
-                    ],
-                  ),
-                ),
-        ),
-      ],
+                    ),
+            ),
+          ],
+        );
+      }
     );
   }
 
@@ -319,7 +351,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // --- TRIPS TAB WITH STREAM BUILDER ---
   Widget _buildTripsTab() {
     return StreamBuilder<List<Trip>>(
       stream: _dbService.tripsStream,
@@ -329,6 +360,9 @@ class _HomeScreenState extends State<HomeScreen> {
         }
 
         if (snapshot.hasError) {
+          if (FirebaseAuth.instance.currentUser == null) {
+             return Center(child: Text('Please log in to view trips'));
+          }
           return Center(child: Text('Error: ${snapshot.error}'));
         }
 
@@ -805,29 +839,40 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // --- MASONRY GALLERY (MEMORIES) ---
   Widget _buildMasonryGallery() {
+    List<Widget> leftColumnChildren = [];
+    List<Widget> rightColumnChildren = [];
+
+    for (int i = 0; i < memories.length; i++) {
+      // Alternate between even (left) and odd (right) to create masonry feel
+      double height = (i % 2 == 0) ? 220.h : 180.h;
+      
+      Widget memoryCard = Padding(
+        padding: EdgeInsets.only(bottom: 16.h),
+        child: _buildMemoryCard(memories[i], height: height),
+      );
+
+      if (i % 2 == 0) {
+        leftColumnChildren.add(memoryCard);
+      } else {
+        rightColumnChildren.add(memoryCard);
+      }
+    }
+
+    // Always add the "Add Photo" card to the right column at the end
+    rightColumnChildren.add(_buildAddPhotoCard());
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(
           child: Column(
-            children: [
-              if (memories.isNotEmpty)
-                _buildMemoryCard(memories[0], height: 220.h),
-              if (memories.length > 1) SizedBox(height: 16.h),
-              if (memories.length > 2)
-                _buildMemoryCard(memories[2], height: 220.h),
-            ],
+            children: leftColumnChildren,
           ),
         ),
         SizedBox(width: 16.w),
         Expanded(
           child: Column(
-            children: [
-              if (memories.length > 1)
-                _buildMemoryCard(memories[1], height: 180.h),
-              if (memories.isNotEmpty) SizedBox(height: 16.h),
-              _buildAddPhotoCard(),
-            ],
+            children: rightColumnChildren,
           ),
         ),
       ],
@@ -863,10 +908,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   ? Image.file(
                       memory['imageFile'],
                       fit: BoxFit.cover,
+                      width: double.infinity,
+                      height: double.infinity,
                     )
                   : Image.asset(
                       memory['image'],
                       fit: BoxFit.cover,
+                      width: double.infinity,
+                      height: double.infinity,
                       errorBuilder: (context, error, stackTrace) {
                         return Container(
                           color: Colors.grey.shade200,

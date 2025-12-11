@@ -3,11 +3,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../core/app_colors.dart';
 import '../widgets/custom_textfield.dart';
 import '../widgets/success_modal.dart';
 import '../widgets/failure_modal.dart';
 import 'login_screen.dart';
+import '../services/auth_service.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -20,11 +22,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final TextEditingController nicknameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController =
-      TextEditingController();
+  final TextEditingController confirmPasswordController = TextEditingController();
+  final AuthService _authService = AuthService();
 
   bool _showPassword = false;
   bool _showConfirmPassword = false;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -49,89 +52,85 @@ class _SignUpScreenState extends State<SignUpScreen> {
     super.dispose();
   }
 
-  void _handleSignUp() {
+  Future<void> _handleSignUp() async {
     String nickname = nicknameController.text.trim();
     String email = emailController.text.trim();
     String password = passwordController.text.trim();
     String confirmPassword = confirmPasswordController.text.trim();
 
     if (nickname.isEmpty) {
-      showDialog(
-        context: context,
-        builder: (context) => FailureModal(
-          title: 'Nickname Required',
-          message: 'Please choose a nickname to personalize your account.',
-          onConfirm: () {},
-        ),
-      );
+      _showError('Nickname Required', 'Please choose a nickname to personalize your account.');
       return;
     }
 
     if (email.isEmpty) {
-      showDialog(
-        context: context,
-        builder: (context) => FailureModal(
-          title: 'Email Required',
-          message: 'Please enter a valid email address to create your account.',
-          onConfirm: () {},
-        ),
-      );
+      _showError('Email Required', 'Please enter a valid email address to create your account.');
       return;
     }
 
     if (password.isEmpty) {
-      showDialog(
-        context: context,
-        builder: (context) => FailureModal(
-          title: 'Password Required',
-          message: 'Please create a secure password for your account.',
-          onConfirm: () {},
-        ),
-      );
+      _showError('Password Required', 'Please create a secure password for your account.');
       return;
     }
 
     if (password != confirmPassword) {
-      showDialog(
-        context: context,
-        builder: (context) => FailureModal(
-          title: 'Password Mismatch',
-          message: 'The passwords you entered do not match. Please try again.',
-          onConfirm: () {},
-        ),
-      );
+      _showError('Password Mismatch', 'The passwords you entered do not match. Please try again.');
       return;
     }
 
     if (password.length < 6) {
-      showDialog(
-        context: context,
-        builder: (context) => FailureModal(
-          title: 'Weak Password',
-          message: 'For your security, your password must be at least 6 characters long.',
-          onConfirm: () {},
-        ),
-      );
+      _showError('Weak Password', 'For your security, your password must be at least 6 characters long.');
       return;
     }
 
-    // Success Simulation
+    setState(() => _isLoading = true);
+
+    try {
+      await _authService.signUp(email, password);
+
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) => SuccessModal(
+          title: 'Account Created!',
+          message: 'Welcome to Lakbay, $nickname! Your account is ready. Let\'s get started.',
+          buttonText: 'Continue to Login',
+          onConfirm: () {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(
+                builder: (context) => LoginScreen(userNickname: nickname),
+              ),
+              (route) => false,
+            );
+          },
+        ),
+      );
+    } on FirebaseAuthException catch (e) {
+      setState(() => _isLoading = false);
+      String msg = 'Signup failed.';
+      if (e.code == 'email-already-in-use') {
+        msg = 'This email is already registered.';
+      } else if (e.code == 'invalid-email') {
+        msg = 'Invalid email format.';
+      }
+      _showError('Error', msg);
+    } catch (e) {
+      setState(() => _isLoading = false);
+      _showError('Error', e.toString());
+    }
+  }
+
+  void _showError(String title, String message) {
     showDialog(
       context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) => SuccessModal(
-        title: 'Account Created!',
-        message: 'Welcome to Lakbay, $nickname! Your account is ready. Let\'s get started.',
-        buttonText: 'Continue to Login',
-        onConfirm: () {
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(
-              builder: (context) => LoginScreen(userNickname: nickname),
-            ),
-            (route) => false,
-          );
-        },
+      builder: (context) => FailureModal(
+        title: title,
+        message: message,
+        onConfirm: () {},
       ),
     );
   }
@@ -265,7 +264,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ),
                       SizedBox(height: 30.h),
                       ElevatedButton(
-                        onPressed: _handleSignUp,
+                        onPressed: _isLoading ? null : _handleSignUp,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.brownPrimary,
                           minimumSize: Size(double.infinity, 60.h),
@@ -273,7 +272,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             borderRadius: BorderRadius.circular(30.r),
                           ),
                         ),
-                        child: Text(
+                        child: _isLoading 
+                          ? CircularProgressIndicator(color: Colors.white)
+                          : Text(
                           'Create Account',
                           style: GoogleFonts.poppins(
                             fontSize: 18.sp,
@@ -282,6 +283,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ),
                         ),
                       ),
+<<<<<<< Updated upstream
                      /* SizedBox(height: 30.h),
                       Text(
                         'Or sign up with',
@@ -308,6 +310,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ),
                         ),
                       ),
+=======
+                      // Removed Google Sign In button here
+>>>>>>> Stashed changes
                       SizedBox(height: 30.h),
                       Text(
                         'By signing up, you agree to our Terms of Service and Privacy Policy',

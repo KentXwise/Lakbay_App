@@ -35,7 +35,7 @@ class _EditActivityModalState extends State<EditActivityModal> {
   late TextEditingController nameController;
   late TextEditingController timeController;
   late TextEditingController locationController;
-  late TextEditingController costController;
+  // removed costController
 
   late String selectedPeriod;
   late String selectedDay;
@@ -49,8 +49,7 @@ class _EditActivityModalState extends State<EditActivityModal> {
     timeController = TextEditingController(text: widget.activity?.time ?? '');
     locationController =
         TextEditingController(text: widget.activity?.location ?? '');
-    costController =
-        TextEditingController(text: widget.activity?.cost.toString() ?? '');
+    // removed costController initialization
 
     if (widget.activity != null) {
       selectedDay = widget.activity?.day ?? 'Day 1';
@@ -70,7 +69,7 @@ class _EditActivityModalState extends State<EditActivityModal> {
     nameController.dispose();
     timeController.dispose();
     locationController.dispose();
-    costController.dispose();
+    // removed costController disposal
     super.dispose();
   }
 
@@ -174,8 +173,7 @@ class _EditActivityModalState extends State<EditActivityModal> {
   void _saveActivity() {
     if (nameController.text.isEmpty ||
         timeController.text.isEmpty ||
-        locationController.text.isEmpty ||
-        costController.text.isEmpty) {
+        locationController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please fill all fields')),
       );
@@ -196,7 +194,8 @@ class _EditActivityModalState extends State<EditActivityModal> {
     }
 
     try {
-      final int cost = int.parse(costController.text);
+      // Cost is now defaulted to 0 since we removed the input
+      final int cost = 0; 
       final String fullTime = '${timeController.text} $selectedPeriod';
 
       final activity = Activity(
@@ -212,7 +211,7 @@ class _EditActivityModalState extends State<EditActivityModal> {
       Navigator.pop(context);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Invalid cost format')),
+        SnackBar(content: Text('Error saving activity: $e')),
       );
     }
   }
@@ -502,47 +501,7 @@ class _EditActivityModalState extends State<EditActivityModal> {
                         ),
                       ),
                     ),
-                    SizedBox(height: 16.h),
-
-                    // Cost
-                    Text(
-                      'Cost (₱)',
-                      style: GoogleFonts.poppins(
-                        fontSize: 12.sp,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.grey.shade800,
-                      ),
-                    ),
-                    SizedBox(height: 8.h),
-                    TextField(
-                      controller: costController,
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                      ],
-                      decoration: InputDecoration(
-                        hintText: '2500',
-                        hintStyle: GoogleFonts.poppins(color: Colors.grey.shade400),
-                        contentPadding:
-                            EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12.r),
-                          borderSide: BorderSide(color: Colors.grey.shade300),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12.r),
-                          borderSide: BorderSide(color: Colors.grey.shade300),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12.r),
-                          borderSide: BorderSide(
-                            color: AppColors.brownPrimary,
-                            width: 2,
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 24.h),
+                    SizedBox(height: 24.h), // Replaced Cost section with just spacing
 
                     // Save Button
                     SizedBox(
