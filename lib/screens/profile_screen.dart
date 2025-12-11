@@ -329,14 +329,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     subtitle: 'Update your personal information',
                     onTap: () => _showEditProfileModal(context),
                   ),
-                  _buildSettingCard(
-                    icon: Icons.lock_outline,
-                    title: 'Privacy & Security',
-                    subtitle: 'Manage your privacy settings',
-                    onTap: () {
+                //  _buildSettingCard(
+                //   icon: Icons.lock_outline,
+                //    title: 'Privacy & Security',
+                //    subtitle: 'Manage your privacy settings',
+                //    onTap: () {
                       // TODO: Navigate to privacy settings
-                    },
-                  ),
+                //    },
+                //  ),
                   _buildSettingCard(
                     icon: Icons.notifications_none,
                     title: 'Notifications',
@@ -357,15 +357,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       color: Colors.grey.shade700,
                     ),
                   ),
-                  SizedBox(height: 12.h),
-                  _buildSettingCard(
-                    icon: Icons.help_outline,
-                    title: 'Help Center',
-                    subtitle: 'Get support and find answers',
-                    onTap: () {
+                //  SizedBox(height: 12.h),
+                //  _buildSettingCard(
+                //    icon: Icons.help_outline,
+                //    title: 'Help Center',
+                //    subtitle: 'Get support and find answers',
+                //    onTap: () {
                       // TODO: Navigate to help center
-                    },
-                  ),
+                //    },
+                //  ),
                   _buildSettingCard(
                     icon: Icons.email_outlined,
                     title: 'Contact Us',
